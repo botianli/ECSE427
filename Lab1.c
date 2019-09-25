@@ -3,10 +3,12 @@
 
 void main() {
 
-    char ansString []="Hello 1";
+    char *ansString="Hello 1";
     printf(" Middle ");
     printf(ansString);
-    char getAns [] = get_a_line();
+    char *answer = " Hello 2";
+    printf (answer);
+    printf(get_a_line());
    // printf("%s", get_a_line());
     /*
     while (1){
@@ -20,7 +22,7 @@ void main() {
 
 
 char* get_a_line(){
-    char* ansString = "Hello 2"; 
+    char *ansString = "Hello 2"; 
     return ansString;
 }
 
