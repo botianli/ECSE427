@@ -1,8 +1,11 @@
+#include <sched.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
-#include<unistd.h>
-#include <sys/wait.h>
+#include <string.h>
+#include <sys/types.h> //for fork
+#include <unistd.h> //for fork and vfork
+#include <sys/wait.h> //for waitpid
+#include <time.h> //for timing
 
 // MEMES
 // gcc _File_
@@ -32,7 +35,6 @@ void main() {
             exit(0);
         }
     }
-   // printf("%s", get_a_line());
     /*
     while (1){
         line = get_a_line();
@@ -69,18 +71,35 @@ int my_system(char * line){
 
     pid_t pid=fork(); 
     
+    char * args [128];
+    
+    char* token ;
+
+    int tokenIndex=0;
+
+    token=strtok(line," \n\t");
+   
+    while(token !=NULL){
+        args[tokenIndex++] = token;
+        token = strtok(NULL," \n\t");
+    }
+   
+    args[tokenIndex]='\0';
+
     if (pid==-1){
         perror("Error with Fork");
         exit(1);
     }
     
     if (pid==0){
-        execvp(line, &line);
+        sleep(1);
+        execvp(args[0], args);
     }
+
     else {
         wait(NULL);
+        printf("\nChildDone\n");
     }
+
     return 0;
-
-
 }
