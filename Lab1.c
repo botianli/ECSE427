@@ -77,6 +77,8 @@ int my_system(char * line){
 
     int tokenIndex=0;
 
+    int status; 
+
     token=strtok(line," \n\t");
    
     while(token !=NULL){
@@ -92,14 +94,14 @@ int my_system(char * line){
     }
     
     if (pid==0){
-        sleep(1);
+        //sleep(1);
         execvp(args[0], args);
     }
 
     else {
-        wait(NULL);
+        waitpid(pid, &status, 0);
         printf("\nChildDone\n");
     }
 
-    return 0;
+    return 1;
 }
