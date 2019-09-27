@@ -96,20 +96,30 @@ int my_system(char * line){
 
     pid_t pid=fork(); 
 
+    char *temp= historyList[lastChar%100];
+        printf("%s", temp);
+        historyList[lastChar%100]=args[0];
+        lastChar=lastChar+1;
+        printf("%d", lastChar);
+
     if (pid==-1){
         perror("Error with Fork");
         exit(1);
     }
     
     if (pid==0){
-        //sleep(1);
-       // printf("\nHello from Child");
+        
+
+
         if(execvp(args[0], &args[0])!=-1){
             printf("%s", "MADE IT");
-            historyList[lastChar%100]=args[0];
-            lastChar=lastChar%100+1;
+            
         }
-        printf("%s", "DIDNT MAKE IT");
+        else {
+            lastChar=lastChar-1;
+            historyList[lastChar%100]=temp;
+            printf("%s", "DIDNT MAKE IT");
+        }
         exit(0);
     }
 
