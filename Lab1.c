@@ -69,7 +69,7 @@ int get_a_line(char** pointerL, size_t *n, FILE *in){
 
 int my_system(char * line){
 
-    pid_t pid=fork(); 
+    
     
     char * args [128];
     
@@ -88,6 +88,8 @@ int my_system(char * line){
    
     args[tokenIndex]='\0';
 
+    pid_t pid=fork(); 
+
     if (pid==-1){
         perror("Error with Fork");
         exit(1);
@@ -95,12 +97,14 @@ int my_system(char * line){
     
     if (pid==0){
         //sleep(1);
-        execvp(args[0], args);
+        printf("\nHello from Child");
+        execvp(args[0], &args[0]);
+        exit(0);
     }
 
     else {
         waitpid(pid, &status, 0);
-        printf("\nChildDone\n");
+        printf("\nHello from Parent");
     }
 
     return 1;
