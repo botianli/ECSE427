@@ -1,15 +1,27 @@
 #include <stdio.h>
 #include <string.h>
 // MEMES
+// git add Lab1.c
+// git commit
+// git push 
+
+char* get_a_line();
+
 
 void main() {
 
-    char *ansString="Hello 1";
-    printf(" Middle ");
-    printf(ansString);
-    char *answer = " Hello 2";
-    printf (answer);
-    printf(get_a_line());
+    char *line = NULL;
+
+
+    while(1){
+        line = get_a_line();
+        if (strlen(line)>1){
+            printf("%s", line);
+        }
+        else {
+            exit(0);
+        }
+    }
    // printf("%s", get_a_line());
     /*
     while (1){
@@ -21,10 +33,9 @@ void main() {
     */
 }
 
-
 char* get_a_line(){
-    char *ansString = "Hello 2"; 
-    return ansString;
+    fgets(line, 128, stdin);
+    return line;
 }
 
 void my_system(){
