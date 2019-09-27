@@ -2,11 +2,13 @@
 #include <string.h>
 #include <stdlib.h>
 // MEMES
+// gcc _File_
+//./a.out
 // git add Lab1.c
 // git commit -m "thing"
 // git push 
 
-char* get_a_line();
+int get_a_line();
 
 
 void main() {
@@ -16,9 +18,8 @@ void main() {
     int i = 0;
 
     while(1){
-        printf("%s","Input: ");
-        if(getline(&line, &n, stdin)==-1){
-            perror("Error");
+        if(get_a_line(&line, &n, stdin)==-1){
+            perror("Error Does not end");
             exit(0);
         }
         if (strlen(line)>1){
@@ -39,10 +40,27 @@ void main() {
     */
 }
 
-//char* get_a_line(char** pointerL){
- //   fgets(line, 128, stdin);
-  //  return line;
-//}
+int get_a_line(char** pointerL, size_t *n, FILE *in){
+    char line [128];
+    fgets(line, 128, in);
+    unsigned int pointerLength;
+    pointerLength=strlen(line); 
+    char * pointer;
+    pointer=strchr(line, '\n');
+    if (pointer==NULL){
+        *pointer = '\0';
+    }
+    if ((pointerLength+1)<256){
+        pointer=realloc(*pointerL, 256);
+        if (pointer==NULL){
+            return (-1);
+        }
+        *pointerL=pointer;
+        *n=128;
+    }
+    strcpy(*pointerL, line);
+    return 0;
+}
 
 void my_system(){
 
