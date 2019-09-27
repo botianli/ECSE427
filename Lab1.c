@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include<unistd.h>
+#include <sys/wait.h>
+
 // MEMES
 // gcc _File_
 //./a.out
@@ -9,7 +12,7 @@
 // git push 
 
 int get_a_line();
-
+int my_system();
 
 void main() {
 
@@ -23,7 +26,7 @@ void main() {
             exit(0);
         }
         if (strlen(line)>1){
-            system(line);
+            my_system(line);
         }
         else {
             exit(0);
@@ -62,6 +65,22 @@ int get_a_line(char** pointerL, size_t *n, FILE *in){
     return 0;
 }
 
-void my_system(){
+int my_system(char * line){
+
+    pid_t pid=fork(); 
+    
+    if (pid==-1){
+        perror("Error with Fork");
+        exit(1);
+    }
+    
+    if (pid==0){
+        execvp(line, &line);
+    }
+    else {
+        wait(NULL);
+    }
+    return 0;
+
 
 }
