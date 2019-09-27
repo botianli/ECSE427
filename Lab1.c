@@ -16,6 +16,9 @@
 
 int get_a_line();
 int my_system();
+void history();
+char * historyList[100];
+int lastChar = 0;
 
 void main() {
 
@@ -28,13 +31,16 @@ void main() {
             perror("Error Does not end");
             exit(0);
         }
-        if (strlen(line)>1){
+        if (strlen(line)>sizeof(char)){
             my_system(line);
         }
         else {
+            printf("HELLO");
+            history();
             exit(0);
         }
     }
+
     /*
     while (1){
         line = get_a_line();
@@ -97,15 +103,37 @@ int my_system(char * line){
     
     if (pid==0){
         //sleep(1);
-        printf("\nHello from Child");
-        execvp(args[0], &args[0]);
+       // printf("\nHello from Child");
+        if(execvp(args[0], &args[0])!=-1){
+            printf("%s", "MADE IT");
+            historyList[lastChar%100]=args[0];
+            lastChar=lastChar%100+1;
+        }
+        printf("%s", "DIDNT MAKE IT");
         exit(0);
     }
 
     else {
         waitpid(pid, &status, 0);
-        printf("\nHello from Parent");
+        //printf("\nHello from Parent");
     }
 
     return 1;
+}
+
+void history (){
+    int temp = lastChar;
+    while(temp<100){
+        if (historyList[temp]!=NULL){
+            printf("%s", historyList[temp]);
+        }
+        temp++;
+    }
+    temp=temp%100;
+    while (temp<lastChar){
+        if (historyList[temp]!=NULL){
+            printf("%s", historyList[temp]);
+        }
+        temp++;
+    }
 }
