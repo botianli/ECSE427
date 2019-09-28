@@ -6,8 +6,8 @@
 #include <unistd.h> //for fork and vfork
 #include <sys/wait.h> //for waitpid
 #include <time.h> //for timing
-#include <fcntl.h> 
 #include <sys/stat.h>
+#include <fcntl.h>
 
 // MEMES
 // gcc _File_
@@ -29,11 +29,10 @@ char * fix;
 char * send;
 char * in;
 int fd;
+int BUFFER_SIZE = 256;
+char buffer[256];
 
 void main() {
-
-    char *fifoPath = "/tmp/fifotest";
-    mkfifo(fifoPath, 0777);
     
     while(1){
 
@@ -103,12 +102,30 @@ int my_system(char * line){
     historyList[lastChar%100]=args[0];
     lastChar=lastChar+1;
 
+    char *fifoPath = "/tmp/fifotest";
+    mkfifo(fifoPath, 0777);
+
     if (pid==-1){
         perror("Error with Fork");
         exit(1);
     }
     
     if (pid==0){
+
+        fd = open(fifoPath, O_WRONLY);
+       // fgets(buffer, BUFFER_SIZE, args);
+        for (int i=0; i<tokenIndex+1; i++){
+            write(fd,args[i],strlen(args[i]));
+        }
+        close (fd);
+      /*  
+        */
+    }
+    else {
+        fd = open(fifoPath, O_RDONLY);
+        for (int i=0; i<tokenIndex+1; i++){
+            read(fd, args[i], sizeof(args[i]));
+        }
         if (strcmp(args[0],"history")==0){
                 history();
             }
@@ -123,13 +140,12 @@ int my_system(char * line){
                 lastChar=lastChar-1;
                 historyList[lastChar%100]=tempChar;
             }
-        }
+        close(fd);
 
-    else {
-        waitpid(pid, &status, 0);
+        //waitpid(pid, &status, 0);
     }
 
-    return 1;
+    return 0;
 }
 
 int chDirect(char *test []) { 
