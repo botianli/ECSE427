@@ -19,14 +19,16 @@ int my_system();
 void history();
 char * historyList[100];
 int lastChar = 0;
+char *tempChar;
 
 void main() {
 
-    char *line = NULL;
-    size_t n = 128; 
-    int i = 0;
-
     while(1){
+
+        char *line = NULL;
+        size_t n = 128; 
+        int i = 0;
+
         if(get_a_line(&line, &n, stdin)==-1){
             perror("Error Does not end");
             exit(0);
@@ -40,15 +42,6 @@ void main() {
             exit(0);
         }
     }
-
-    /*
-    while (1){
-        line = get_a_line();
-        if (length(line)>1) {
-            my_system(line);
-        }
-    }
-    */
 }
 
 int get_a_line(char** pointerL, size_t *n, FILE *in){
@@ -96,11 +89,9 @@ int my_system(char * line){
 
     pid_t pid=fork(); 
 
-    char *temp= historyList[lastChar%100];
-        printf("%s", temp);
-        historyList[lastChar%100]=args[0];
-        lastChar=lastChar+1;
-        printf("%d", lastChar);
+    tempChar = historyList[lastChar%100];
+    historyList[lastChar%100]=args[0];
+    lastChar=lastChar+1;
 
     if (pid==-1){
         perror("Error with Fork");
@@ -108,41 +99,43 @@ int my_system(char * line){
     }
     
     if (pid==0){
-        
-
+        if (strcmp(args[0],"history")==0){
+            history();
+        }
+        else{
 
         if(execvp(args[0], &args[0])!=-1){
-            printf("%s", "MADE IT");
-            
         }
         else {
             lastChar=lastChar-1;
-            historyList[lastChar%100]=temp;
-            printf("%s", "DIDNT MAKE IT");
+            historyList[lastChar%100]=tempChar;
         }
-        exit(0);
+        }
+        
     }
 
     else {
         waitpid(pid, &status, 0);
-        //printf("\nHello from Parent");
     }
 
     return 1;
 }
 
 void history (){
+    printf("\n\n%s", "History of the System Has : ");
     int temp = lastChar;
+    printf("%d %s", temp, "entries");
+    temp=temp%100;
     while(temp<100){
         if (historyList[temp]!=NULL){
-            printf("%s", historyList[temp]);
+            printf("\n%s", historyList[temp]);
         }
         temp++;
     }
-    temp=temp%100;
-    while (temp<lastChar){
+    temp=0;
+    while (temp<(lastChar%100)){
         if (historyList[temp]!=NULL){
-            printf("%s", historyList[temp]);
+            printf("\n%s", historyList[temp]);
         }
         temp++;
     }
