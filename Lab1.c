@@ -17,6 +17,7 @@
 int get_a_line();
 int my_system();
 void history();
+//void chdir();
 char * historyList[100];
 int lastChar = 0;
 char *tempChar;
@@ -37,8 +38,6 @@ void main() {
             my_system(line);
         }
         else {
-            printf("HELLO");
-            history();
             exit(0);
         }
     }
@@ -99,19 +98,22 @@ int my_system(char * line){
     }
     
     if (pid==0){
-        if (strcmp(args[0],"history")==0){
-            history();
-        }
-        else{
+        
 
         if(execvp(args[0], &args[0])!=-1){
         }
         else {
+            if (strcmp(args[0],"history")==0){
+            history();
+            }
+            else if (strcmp(args[0],"chdir")==0){
+            //chdir();
+            }
+            else {     
             lastChar=lastChar-1;
             historyList[lastChar%100]=tempChar;
+            }
         }
-        }
-        
     }
 
     else {
@@ -120,6 +122,11 @@ int my_system(char * line){
 
     return 1;
 }
+
+//void chdir() { 
+
+//}
+
 
 void history (){
     printf("\n\n%s", "History of the System Has : ");
