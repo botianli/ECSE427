@@ -6,6 +6,8 @@
 #include <unistd.h> //for fork and vfork
 #include <sys/wait.h> //for waitpid
 #include <time.h> //for timing
+#include <fcntl.h> 
+#include <sys/stat.h>
 
 // MEMES
 // gcc _File_
@@ -26,10 +28,13 @@ char * newArgs;
 char * fix;
 char * send;
 char * in;
-
+int fd;
 
 void main() {
 
+    char *fifoPath = "/tmp/fifotest";
+    mkfifo(fifoPath, 0777);
+    
     while(1){
 
         char *line = NULL;
@@ -133,7 +138,7 @@ int chDirect(char *test []) {
     //char *newArr = strcat(buf, "chdir ");
     //fix = strcat(newArr, test[1]);
     
-    
+
     if(chdir(test[1])==0){
         printf("%s%s", "Directory is ", test[1]);
     }
