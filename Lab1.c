@@ -17,7 +17,7 @@
 int get_a_line();
 int my_system();
 void history();
-void chDirect(char * args []);
+int chDirect(char * args []);
 char * historyList[100];
 int lastChar = 0;
 char *tempChar;
@@ -25,7 +25,7 @@ char buf [128];
 char * newArgs;
 char * fix;
 char * send;
-
+char * in;
 
 
 void main() {
@@ -104,24 +104,21 @@ int my_system(char * line){
     }
     
     if (pid==0){
-        
-
-        if(execvp(args[0], &args[0])!=-1){
+        if (strcmp(args[0],"history")==0){
+                history();
+            }
+        else if (strcmp(args[0],"chdir")==0){
+                chDirect(args);
+            }
+        else if(execvp(args[0], &args[0])!=-1){
+            printf("%s", "error");
         }
-        else {
-            if (strcmp(args[0],"history")==0){
-            history();
-            }
-            else if (strcmp(args[0],"chdir")==0){
-                printf("%s", "Sup");
-            chDirect(args);
-            }
-            else {     
-            lastChar=lastChar-1;
-            historyList[lastChar%100]=tempChar;
+        else {     
+                printf("%s", "nothing");          
+                lastChar=lastChar-1;
+                historyList[lastChar%100]=tempChar;
             }
         }
-    }
 
     else {
         waitpid(pid, &status, 0);
@@ -130,19 +127,25 @@ int my_system(char * line){
     return 1;
 }
 
-void chDirect(char *args []) { 
-   // printf("%s", "Is here");
-   // printf("%s", args[0]);
-    char buf [128];
-    char * newArgs= getcwd(buf, sizeof(buf));
-    char * fix= strcat(newArgs, "cd/");
-    char * send =strcat("cd/", args[1]);
-    //printf("%s", args[0]);
-   ///printf("%s", args[1]);
-    printf("%s", send);
-    chdir(send);
-       //printf("%s", "shit");
-    printf("%s","anything");
+int chDirect(char *test []) { 
+    
+    
+    //char *newArr = strcat(buf, "chdir ");
+    //fix = strcat(newArr, test[1]);
+    
+    
+    if(chdir(test[1])==0){
+        printf("%s%s", "Directory is ", test[1]);
+    }
+    else {
+        printf("%s%s", "Error the following directory does not exist: ", test[1]);
+        lastChar=lastChar-1;
+        historyList[lastChar%100]=tempChar;
+    }
+    
+    // /tmp/home/richard.mansdoerfer/Desktop/ECSE 427
+    
+    return 0;
 }
 
 
