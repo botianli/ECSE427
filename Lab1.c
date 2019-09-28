@@ -17,10 +17,16 @@
 int get_a_line();
 int my_system();
 void history();
-//void chdir();
+void chDirect(char * args []);
 char * historyList[100];
 int lastChar = 0;
 char *tempChar;
+char buf [128];
+char * newArgs;
+char * fix;
+char * send;
+
+
 
 void main() {
 
@@ -107,7 +113,8 @@ int my_system(char * line){
             history();
             }
             else if (strcmp(args[0],"chdir")==0){
-            //chdir();
+                printf("%s", "Sup");
+            chDirect(args);
             }
             else {     
             lastChar=lastChar-1;
@@ -123,9 +130,20 @@ int my_system(char * line){
     return 1;
 }
 
-//void chdir() { 
-
-//}
+void chDirect(char *args []) { 
+   // printf("%s", "Is here");
+   // printf("%s", args[0]);
+    char buf [128];
+    char * newArgs= getcwd(buf, sizeof(buf));
+    char * fix= strcat(newArgs, "cd/");
+    char * send =strcat("cd/", args[1]);
+    //printf("%s", args[0]);
+   ///printf("%s", args[1]);
+    printf("%s", send);
+    chdir(send);
+       //printf("%s", "shit");
+    printf("%s","anything");
+}
 
 
 void history (){
