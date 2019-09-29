@@ -18,7 +18,7 @@
 
 int get_a_line();
 int my_system();
-void history();
+int history();
 int chDirect(char * args []);
 char * historyList[100];
 int lastChar = 0;
@@ -31,6 +31,9 @@ char * in;
 int fd;
 int BUFFER_SIZE = 256;
 char buffer[256];
+char *bufpoint[]={buffer, NULL};
+char L;
+int len;
 
 void main() {
     
@@ -47,7 +50,7 @@ void main() {
         if (strlen(line)>sizeof(char)){
             my_system(line);
         }
-        else {
+        if (strlen(line)<sizeof(char)) {
             exit(0);
         }
     }
@@ -72,7 +75,7 @@ int get_a_line(char** pointerL, size_t *n, FILE *in){
         *n=128;
     }
     strcpy(*pointerL, line);
-    return 0;
+    return 1;
 }
 
 int my_system(char * line){
@@ -115,6 +118,8 @@ int my_system(char * line){
         fd = open(fifoPath, O_WRONLY);
        // fgets(buffer, BUFFER_SIZE, args);
         for (int i=0; i<tokenIndex+1; i++){
+            L=(char)strlen(args[i]);
+            write(fd,&L,1);
             write(fd,args[i],strlen(args[i]));
         }
         close (fd);
@@ -122,27 +127,40 @@ int my_system(char * line){
         */
     }
     else {
+        int res;
+        char tie;
+        char *input;
+        char *hereWeGo; 
+        while (1){
         fd = open(fifoPath, O_RDONLY);
-        for (int i=0; i<tokenIndex+1; i++){
-            read(fd, args[i], sizeof(args[i]));
+        res=read(fd,&tie,1);
+        
+        if (res==0){
+            break;
         }
-        if (strcmp(args[0],"history")==0){
+        
+        read(fd, buffer, tie);
+        buffer[tie]='\0';
+        
+        if (strcmp(buffer,"history")==0){
                 history();
             }
-        else if (strcmp(args[0],"chdir")==0){
+        else if (strcmp(buffer,"chdir")==0){
                 chDirect(args);
-            }
-        else if(execvp(args[0], &args[0])!=-1){
-            printf("%s", "error");
+        }    
+        
+        else if(execvp(buffer, bufpoint)!=-1){
+             perror("Input Error");
         }
         else {     
-                printf("%s", "nothing");          
+                perror("Command does not exist");          
                 lastChar=lastChar-1;
                 historyList[lastChar%100]=tempChar;
             }
+        }
         close(fd);
 
-        //waitpid(pid, &status, 0);
+       
     }
 
     return 0;
@@ -170,11 +188,10 @@ int chDirect(char *test []) {
 }
 
 
-void history (){
+int history (){
     printf("\n\n%s", "History of the System Has : ");
-    int temp = lastChar;
+    int temp = lastChar%100;
     printf("%d %s", temp, "entries");
-    temp=temp%100;
     while(temp<100){
         if (historyList[temp]!=NULL){
             printf("\n%s", historyList[temp]);
@@ -188,4 +205,5 @@ void history (){
         }
         temp++;
     }
+    return 1;
 }
