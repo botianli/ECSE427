@@ -37,20 +37,25 @@ int len;
 
 void main() {
     
+    fflush(stdout);
+    fflush(stdin);
+
     while(1){
-
         char *line = NULL;
-        size_t n = 128; 
+        size_t n; 
         int i = 0;
+       // fflush(stdin);
 
-        if(get_a_line(&line, &n, stdin)==-1){
+       //if(get_a_line(&line, &n, stdin)==-1){
+        if (getline(&line, &n, stdin)==-1){
             perror("Error Does not end");
             exit(0);
         }
-        if (strlen(line)>sizeof(char)){
+        if (strlen(line)>1){
+            printf("%ld", strlen(line));
             my_system(line);
         }
-        if (strlen(line)<sizeof(char)) {
+        else {
             exit(0);
         }
     }
@@ -80,7 +85,7 @@ int get_a_line(char** pointerL, size_t *n, FILE *in){
 
 int my_system(char * line){
 
-    
+    printf("%s", line);
     
     char * args [128];
     
@@ -91,7 +96,8 @@ int my_system(char * line){
     int status; 
 
     token=strtok(line," \n\t");
-   
+
+
     while(token !=NULL){
         args[tokenIndex++] = token;
         token = strtok(NULL," \n\t");
@@ -115,41 +121,18 @@ int my_system(char * line){
     
     if (pid==0){
 
-        fd = open(fifoPath, O_WRONLY);
-       // fgets(buffer, BUFFER_SIZE, args);
-        for (int i=0; i<tokenIndex+1; i++){
-            L=(char)strlen(args[i]);
-            write(fd,&L,1);
-            write(fd,args[i],strlen(args[i]));
-        }
-        close (fd);
-      /*  
-        */
-    }
-    else {
-        int res;
-        char tie;
-        char *input;
-        char *hereWeGo; 
-        while (1){
-        fd = open(fifoPath, O_RDONLY);
-        res=read(fd,&tie,1);
-        
-        if (res==0){
-            break;
-        }
-        
-        read(fd, buffer, tie);
-        buffer[tie]='\0';
-        
-        if (strcmp(buffer,"history")==0){
+        //printf("%s", "Hello");
+
+        //fd = open(fifoPath, O_WRONLY);
+
+        if (strcmp(args[0],"history")==0){
                 history();
             }
-        else if (strcmp(buffer,"chdir")==0){
+        else if (strcmp(args[0],"chdir")==0){
                 chDirect(args);
         }    
         
-        else if(execvp(buffer, bufpoint)!=-1){
+        else if(execvp(args[0], &args[0])!=-1){
              perror("Input Error");
         }
         else {     
@@ -157,8 +140,20 @@ int my_system(char * line){
                 lastChar=lastChar-1;
                 historyList[lastChar%100]=tempChar;
             }
-        }
-        close(fd);
+       //fflush(stdout);
+       //dup2(fd,1);
+       //close(fd);
+       //fflush(stdin);
+    }
+    else {
+        
+        
+        wait(NULL);
+    
+      // fd = open(fifoPath, O_RDONLY);
+      // dup2(1, fd);
+      // fflush(stdout);
+      // close(fd);
 
        
     }
@@ -174,10 +169,10 @@ int chDirect(char *test []) {
     
 
     if(chdir(test[1])==0){
-        printf("%s%s", "Directory is ", test[1]);
+        printf("%s%s\n", "Directory is ", test[1]);
     }
     else {
-        printf("%s%s", "Error the following directory does not exist: ", test[1]);
+        printf("%s%s\n", "Error the following directory does not exist: ", test[1]);
         lastChar=lastChar-1;
         historyList[lastChar%100]=tempChar;
     }
@@ -191,17 +186,17 @@ int chDirect(char *test []) {
 int history (){
     printf("\n\n%s", "History of the System Has : ");
     int temp = lastChar%100;
-    printf("%d %s", temp, "entries");
+    printf("%d %s \n", temp, "entries");
     while(temp<100){
         if (historyList[temp]!=NULL){
-            printf("\n%s", historyList[temp]);
+            printf("%s\n", historyList[temp]);
         }
         temp++;
     }
     temp=0;
     while (temp<(lastChar%100)){
         if (historyList[temp]!=NULL){
-            printf("\n%s", historyList[temp]);
+            printf("%s\n", historyList[temp]);
         }
         temp++;
     }
