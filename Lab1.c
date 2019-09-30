@@ -10,7 +10,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#define SIG
 // MEMES
 // gcc _File_
 //./a.out
@@ -40,7 +39,9 @@ int recentPID = 0;
 
 char toPrint [256];
 
-void pidCheck(int sig) {
+/*
+void pidCheck(int sigPid) {
+    signal(sigPid, SIG_IGN);
 	if (recentPID == 0) {
 		//ignore this call and continue normally
 		exit(0);
@@ -50,12 +51,24 @@ void pidCheck(int sig) {
 		recentPID = 0;
 	}
 }
+*/
+void zHandler (int check){
+    signal(SIGINT, SIG_IGN);
+    signal(SIGTSTP, SIG_IGN);
+    
+    signal(SIGTSTP, zHandler);
+
+    printf("Cannot be terminated! \n");
+    fflush(stdout);
+}
+
 
 void intHandler2(int sigCheck){
 
     char c; 
 
-    signal(sigCheck, SIG_IGN);
+    signal(SIGINT, SIG_IGN);
+    signal(SIGTSTP, SIG_IGN);
     printf("Do you really want to quit? [y/n]");
     c =getchar();
 
@@ -71,7 +84,7 @@ void intHandler2(int sigCheck){
 
 
 void main() {
-    signal(SIGINT, intHandler2);
+     
     fflush(stdout);
     fflush(stdin);
     char *fifoPath = "/tmp/user/richard.mansdoerfer/Desktop/ECSE427";
@@ -125,7 +138,10 @@ int get_a_line(char** pointerL, size_t *n, FILE *in){
 
 int my_system(char * lineArg){
 
-    pidCheck(SIGINT, sigCheck);
+    signal(SIGINT, intHandler2);
+    signal(SIGTSTP, zHandler);
+
+   // signal(SIGINT, pidCheck);
 
     printf("%s%s", "At My system : ", lineArg);
 
@@ -150,8 +166,6 @@ int my_system(char * lineArg){
     token=strtok(lineArg," \n\t");
 
     int j=0;
-
-
 
     while(token !=NULL){
        
@@ -186,7 +200,7 @@ int my_system(char * lineArg){
     historyList[lastChar%100]=args[0];
     lastChar=lastChar+1;
 
-    read(fd[0], buffer, sizeof(buffer));
+   // read(fd[0], buffer, sizeof(buffer));
 
     pid_t pid=fork(); 
 
@@ -220,11 +234,11 @@ int my_system(char * lineArg){
                 historyList[lastChar%100]=tempChar;
                 perror("Command does not exist"); 
         }
-       // fflush(stdout);
         
         recentPID=getpid(); 
         
         kill(recentPID, SIGKILL);    
+
        //fflush(stdout);
        //dup2(fd,1);
        //close(fd);
@@ -232,7 +246,7 @@ int my_system(char * lineArg){
     }
     else {
         //printf("%s%s", "This is ", args[0]);
-
+       // waitpid(pid, &status, 0);
         close(fd[1]); 
         read(fd[0], buffer, sizeof(buffer));
         printf("%s", buffer);
@@ -249,7 +263,6 @@ int my_system(char * lineArg){
         
         }
         
-        waitpid(pid, &status, 0);
     
       //printf("%s", "Hello Done With Parent");
     
