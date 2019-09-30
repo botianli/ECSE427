@@ -10,6 +10,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#define SIG
 // MEMES
 // gcc _File_
 //./a.out
@@ -39,7 +40,7 @@ int recentPID = 0;
 
 char toPrint [256];
 
-void intHandler(int SIG) {
+void pidCheck(int sig) {
 	if (recentPID == 0) {
 		//ignore this call and continue normally
 		exit(0);
@@ -50,18 +51,34 @@ void intHandler(int SIG) {
 	}
 }
 
+void intHandler2(int sigCheck){
+
+    char c; 
+
+    signal(sigCheck, SIG_IGN);
+    printf("Do you really want to quit? [y/n]");
+    c =getchar();
+
+    if (c=='y' || c == 'Y'){
+        exit(0);
+    }
+    else {
+        signal(SIGINT, intHandler2);
+    }
+    getchar();
+}
+
 
 
 void main() {
-    
+    signal(SIGINT, intHandler2);
     fflush(stdout);
-    
-
-    char *fifoPath = "/tmp/fifotest";
+    fflush(stdin);
+    char *fifoPath = "/tmp/user/richard.mansdoerfer/Desktop/ECSE427";
     mkfifo(fifoPath, 0777);
 
     pipe(fd);
-
+    
 
     while(1){
         char *line = NULL;
@@ -75,7 +92,7 @@ void main() {
             exit(0);
         }
         if (strlen(line)>1){
-           // printf("%ld", strlen(line));
+            //printf("%ld", strlen(line));
             my_system(line);
         }
         else {
@@ -108,10 +125,10 @@ int get_a_line(char** pointerL, size_t *n, FILE *in){
 
 int my_system(char * lineArg){
 
-    signal(SIGINT, intHandler);
+    pidCheck(SIGINT, sigCheck);
 
-    //printf("%s%s", "At My system : ", line);
-    
+    printf("%s%s", "At My system : ", lineArg);
+
     char * args [128];
     
     char* token ;
@@ -134,7 +151,6 @@ int my_system(char * lineArg){
 
     int j=0;
 
-    
 
 
     while(token !=NULL){
@@ -164,26 +180,25 @@ int my_system(char * lineArg){
         args[tokenIndex]='\0';
     }
     pipeArgs[pipedIndex]='\0';
-
-
-    pid_t pid=fork(); 
     
-
 
     tempChar = historyList[lastChar%100];
     historyList[lastChar%100]=args[0];
     lastChar=lastChar+1;
 
-    
+    read(fd[0], buffer, sizeof(buffer));
+
+    pid_t pid=fork(); 
+
 
     if (pid==-1){
         perror("Error with Fork");
         exit(1);
     }
     
+
     if (pid==0){
-           
-        
+
         close(fd[0]);
         dup2(fd[1], STDOUT_FILENO);
 
@@ -234,14 +249,9 @@ int my_system(char * lineArg){
         
         }
         
-
-    waitpid(pid, &status, 0);
-
-     
-        
-      
-
-       //printf("%s", "Hello Done With Parent");
+        waitpid(pid, &status, 0);
+    
+      //printf("%s", "Hello Done With Parent");
     
       // fd = open(fifoPath, O_RDONLY);
       // dup2(1, fd);
