@@ -29,10 +29,9 @@ char * newArgs;
 char * fix;
 char * send;
 char * in;
-int fd[2];
+
 int BUFFER_SIZE = 256;
-char buffer[256];
-char *bufpoint[]={buffer, NULL};
+
 char L;
 int len;
 int recentPID = 0;
@@ -58,7 +57,7 @@ void zHandler (int check){
     
     signal(SIGTSTP, zHandler);
 
-    printf("Cannot be terminated! \n");
+    printf(" : This system ignores that command! \n");
     fflush(stdout);
 }
 
@@ -69,7 +68,10 @@ void intHandler2(int sigCheck){
 
     signal(SIGINT, SIG_IGN);
     signal(SIGTSTP, SIG_IGN);
-    printf("Do you really want to quit? [y/n]");
+
+    printf("Do you want to quit the program right now? Please input : [y/n] ");
+    
+    
     c =getchar();
 
     if (c=='y' || c == 'Y'){
@@ -90,7 +92,7 @@ void main() {
     char *fifoPath = "/tmp/user/richard.mansdoerfer/Desktop/ECSE427";
     mkfifo(fifoPath, 0777);
 
-    pipe(fd);
+    
     
 
     while(1){
@@ -163,6 +165,10 @@ int my_system(char * lineArg){
 
     char * pipeArgs [128];
 
+    int fd[2];
+
+    pipe(fd);
+
     token=strtok(lineArg," \n\t");
 
     int j=0;
@@ -211,7 +217,7 @@ int my_system(char * lineArg){
     }
     
 
-    if (pid==0){
+    else if (pid==0){
 
         close(fd[0]);
         dup2(fd[1], STDOUT_FILENO);
@@ -235,6 +241,7 @@ int my_system(char * lineArg){
                 perror("Command does not exist"); 
         }
         
+       // fflush(stdout);
         recentPID=getpid(); 
         
         kill(recentPID, SIGKILL);    
@@ -245,12 +252,19 @@ int my_system(char * lineArg){
        //fflush(stdin);
     }
     else {
+
+        char buffer[256];
+
         //printf("%s%s", "This is ", args[0]);
        // waitpid(pid, &status, 0);
         close(fd[1]); 
         read(fd[0], buffer, sizeof(buffer));
+        
         printf("%s", buffer);
+       
+        //printf("%s", buffer);
 
+        waitpid(pid, &status, 0);
 
         if (pipedArg==1){
             pid_t pid2=fork();
@@ -263,7 +277,7 @@ int my_system(char * lineArg){
         
         }
         
-    
+            
       //printf("%s", "Hello Done With Parent");
     
       // fd = open(fifoPath, O_RDONLY);
