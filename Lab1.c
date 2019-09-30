@@ -1,4 +1,5 @@
 #include <sched.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,17 +29,39 @@ char * newArgs;
 char * fix;
 char * send;
 char * in;
-int fd;
+int fd[2];
 int BUFFER_SIZE = 256;
 char buffer[256];
 char *bufpoint[]={buffer, NULL};
 char L;
 int len;
+int recentPID = 0;
+
+char toPrint [256];
+
+void intHandler(int SIG) {
+	if (recentPID == 0) {
+		//ignore this call and continue normally
+		exit(0);
+	} else {
+		//kill the top process
+		kill(recentPID, SIGKILL);
+		recentPID = 0;
+	}
+}
+
+
 
 void main() {
     
     fflush(stdout);
-    fflush(stdin);
+    
+
+    char *fifoPath = "/tmp/fifotest";
+    mkfifo(fifoPath, 0777);
+
+    pipe(fd);
+
 
     while(1){
         char *line = NULL;
@@ -52,7 +75,7 @@ void main() {
             exit(0);
         }
         if (strlen(line)>1){
-            printf("%ld", strlen(line));
+           // printf("%ld", strlen(line));
             my_system(line);
         }
         else {
@@ -83,9 +106,11 @@ int get_a_line(char** pointerL, size_t *n, FILE *in){
     return 1;
 }
 
-int my_system(char * line){
+int my_system(char * lineArg){
 
-    printf("%s", line);
+    signal(SIGINT, intHandler);
+
+    //printf("%s%s", "At My system : ", line);
     
     char * args [128];
     
@@ -93,26 +118,63 @@ int my_system(char * line){
 
     int tokenIndex=0;
 
+    int pipedIndex=0;
+
     int status; 
 
-    token=strtok(line," \n\t");
+    int pipedArg=0;
+
+    char * nextTok; 
+
+    char lit [128];
+
+    char * pipeArgs [128];
+
+    token=strtok(lineArg," \n\t");
+
+    int j=0;
+
+    
 
 
     while(token !=NULL){
-        args[tokenIndex++] = token;
-        token = strtok(NULL," \n\t");
+       
+        if (pipedArg==1){
+            pipeArgs[pipedIndex++]=token;
+            //printf("%s", pipeArgs[pipedIndex-1]);
+            token = strtok(NULL," \n\t");
+            //token = strtok(NULL," \n\t");
+            
+        }
+        else {
+            args[tokenIndex++] = token;
+            //printf("%s", args[tokenIndex-1]);
+            if ((strcmp(args[tokenIndex-1],"|"))==0 ){
+                   pipedArg=1;
+            }
+            token = strtok(NULL," \n\t");
+        }
     }
-   
-    args[tokenIndex]='\0';
+
+
+    if (pipedArg==1){
+        args[tokenIndex-1]='\0';
+    }
+    else {
+        args[tokenIndex]='\0';
+    }
+    pipeArgs[pipedIndex]='\0';
+
 
     pid_t pid=fork(); 
+    
+
 
     tempChar = historyList[lastChar%100];
     historyList[lastChar%100]=args[0];
     lastChar=lastChar+1;
 
-    char *fifoPath = "/tmp/fifotest";
-    mkfifo(fifoPath, 0777);
+    
 
     if (pid==-1){
         perror("Error with Fork");
@@ -120,14 +182,16 @@ int my_system(char * line){
     }
     
     if (pid==0){
+           
+        
+        close(fd[0]);
+        dup2(fd[1], STDOUT_FILENO);
 
-        //printf("%s", "Hello");
-
-        //fd = open(fifoPath, O_WRONLY);
 
         if (strcmp(args[0],"history")==0){
                 history();
-            }
+        }
+
         else if (strcmp(args[0],"chdir")==0){
                 chDirect(args);
         }    
@@ -135,20 +199,49 @@ int my_system(char * line){
         else if(execvp(args[0], &args[0])!=-1){
              perror("Input Error");
         }
-        else {     
-                perror("Command does not exist");          
+        
+        else {
                 lastChar=lastChar-1;
                 historyList[lastChar%100]=tempChar;
-            }
+                perror("Command does not exist"); 
+        }
+       // fflush(stdout);
+        
+        recentPID=getpid(); 
+        
+        kill(recentPID, SIGKILL);    
        //fflush(stdout);
        //dup2(fd,1);
        //close(fd);
        //fflush(stdin);
     }
     else {
+        //printf("%s%s", "This is ", args[0]);
+
+        close(fd[1]); 
+        read(fd[0], buffer, sizeof(buffer));
+        printf("%s", buffer);
+
+
+        if (pipedArg==1){
+            pid_t pid2=fork();
+            if (pid2==0){
+                my_system(pipeArgs[0]);
+            }
+            else {
+                waitpid(pid2, &status , 0);
+            }
         
+        }
         
-        wait(NULL);
+
+    waitpid(pid, &status, 0);
+
+     
+        
+      
+
+       //printf("%s", "Hello Done With Parent");
     
       // fd = open(fifoPath, O_RDONLY);
       // dup2(1, fd);
