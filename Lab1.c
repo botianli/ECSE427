@@ -10,47 +10,19 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-// MEMES
-// gcc _File_
-//./a.out
-// git add Lab1.c
-// git commit -m "thing"
-// git push 
+
+char * historyList[100];
+int lastChar = 0;
+char *tempChar;
+int recentPID = 0;
+
 
 int get_a_line();
 int my_system();
 int history();
 int chDirect(char * args []);
-char * historyList[100];
-int lastChar = 0;
-char *tempChar;
-char buf [128];
-char * newArgs;
-char * fix;
-char * send;
-char * in;
 
-int BUFFER_SIZE = 256;
 
-char L;
-int len;
-int recentPID = 0;
-
-char toPrint [256];
-
-/*
-void pidCheck(int sigPid) {
-    signal(sigPid, SIG_IGN);
-	if (recentPID == 0) {
-		//ignore this call and continue normally
-		exit(0);
-	} else {
-		//kill the top process
-		kill(recentPID, SIGKILL);
-		recentPID = 0;
-	}
-}
-*/
 void zHandler (int check){
     signal(SIGINT, SIG_IGN);
     signal(SIGTSTP, SIG_IGN);
@@ -92,20 +64,20 @@ void main() {
     char *fifoPath = "/tmp/user/richard.mansdoerfer/Desktop/ECSE427";
     mkfifo(fifoPath, 0777);
 
-    
-    
-
     while(1){
         char *line = NULL;
         size_t n; 
         int i = 0;
-       // fflush(stdin);
+        fflush(stdout);
 
        //if(get_a_line(&line, &n, stdin)==-1){
         if (getline(&line, &n, stdin)==-1){
             perror("Error Does not end");
             exit(0);
         }
+
+
+
         if (strlen(line)>1){
             //printf("%ld", strlen(line));
             my_system(line);
@@ -115,6 +87,7 @@ void main() {
         }
     }
 }
+
 
 int get_a_line(char** pointerL, size_t *n, FILE *in){
     char line [128];
@@ -143,14 +116,16 @@ int my_system(char * lineArg){
     signal(SIGINT, intHandler2);
     signal(SIGTSTP, zHandler);
 
-   // signal(SIGINT, pidCheck);
-
     printf("%s%s", "At My system : ", lineArg);
 
     char * args [128];
     
+    char * pipeArgs [128];
+
     char* token ;
 
+    char * nextTok; 
+    
     int tokenIndex=0;
 
     int pipedIndex=0;
@@ -159,19 +134,11 @@ int my_system(char * lineArg){
 
     int pipedArg=0;
 
-    char * nextTok; 
+    char  * buffer ;
+    memset (buffer,'\0',256);
 
-    char lit [128];
-
-    char * pipeArgs [128];
-
-    int fd[2];
-
-    pipe(fd);
 
     token=strtok(lineArg," \n\t");
-
-    int j=0;
 
     while(token !=NULL){
        
@@ -206,17 +173,18 @@ int my_system(char * lineArg){
     historyList[lastChar%100]=args[0];
     lastChar=lastChar+1;
 
-   // read(fd[0], buffer, sizeof(buffer));
 
-    pid_t pid=fork(); 
+    int fd[2];
+    pipe(fd);
 
+    pid_t pid=fork();
+    
 
     if (pid==-1){
         perror("Error with Fork");
         exit(1);
     }
     
-
     else if (pid==0){
 
         close(fd[0]);
@@ -234,6 +202,7 @@ int my_system(char * lineArg){
         else if(execvp(args[0], &args[0])!=-1){
              perror("Input Error");
         }
+
         
         else {
                 lastChar=lastChar-1;
@@ -241,30 +210,22 @@ int my_system(char * lineArg){
                 perror("Command does not exist"); 
         }
         
-       // fflush(stdout);
         recentPID=getpid(); 
         
         kill(recentPID, SIGKILL);    
 
-       //fflush(stdout);
-       //dup2(fd,1);
-       //close(fd);
-       //fflush(stdin);
     }
+
     else {
 
-        char buffer[256];
-
-        //printf("%s%s", "This is ", args[0]);
-       // waitpid(pid, &status, 0);
-        close(fd[1]); 
-        read(fd[0], buffer, sizeof(buffer));
+        close(fd[1]);
+        read(fd[0], buffer, 256);
         
         printf("%s", buffer);
-       
+
         //printf("%s", buffer);
 
-        waitpid(pid, &status, 0);
+      //  waitpid(pid, &status, 0);
 
         if (pipedArg==1){
             pid_t pid2=fork();
@@ -277,14 +238,7 @@ int my_system(char * lineArg){
         
         }
         
-            
       //printf("%s", "Hello Done With Parent");
-    
-      // fd = open(fifoPath, O_RDONLY);
-      // dup2(1, fd);
-      // fflush(stdout);
-      // close(fd);
-
        
     }
 
@@ -293,6 +247,14 @@ int my_system(char * lineArg){
 
 int chDirect(char *test []) { 
     
+    char direction [256];
+    int i=1;
+    
+    //while (test[i]!=0){
+    //    printf("%s", test[i]);
+        //direction[i-1]=&test[i];
+        //i++;
+   // }
     
     //char *newArr = strcat(buf, "chdir ");
     //fix = strcat(newArr, test[1]);
