@@ -11,15 +11,18 @@
 #include <fcntl.h>
 
 
-char * historyList[100];
-int lastChar = 0;
-int recentPID = 0;
+
+
 
 
 int get_a_line();
 int my_system();
 int history (char *list[], int currChar);
 int chDirect(char * args []);
+
+char * historyList[100];
+int lastChar = 0;
+int recentPID = 0;
 
 
 void zHandler (int check){
@@ -58,16 +61,13 @@ void intHandler2(int sigCheck){
 
 void main() {
      
-    fflush(stdout);
-    fflush(stdin);
-
-    
-    
+     for (int i=0; i<100; i++){
+         historyList[i]=NULL;
+     }
 
     while(1){
         char *line = NULL;
         size_t n; 
-        fflush(stdout);
 
        //if(get_a_line(&line, &n, stdin)==-1){
         if (getline(&line, &n, stdin)==-1){
@@ -106,6 +106,8 @@ int get_a_line(char** pointerL, size_t *n, FILE *in){
     return 1;
 }
 
+
+
 int my_system(char * lineArg){
 
     signal(SIGINT, intHandler2);
@@ -121,6 +123,7 @@ int my_system(char * lineArg){
     char* token ;
 
     char * nextTok; 
+    
     
     int tokenIndex=0;
 
@@ -164,14 +167,13 @@ int my_system(char * lineArg){
     }
     pipeArgs[pipedIndex]='\0';
     
+
     historyList[lastChar]=args[0];
-    printf("%s", historyList[lastChar]);
-    lastChar=(lastChar+1)%100;
-    
+    lastChar=(lastChar+1);
+    printf("%s%s","This is ", args[0]);
 
     int fd;
-    char answerArray [256];
-    memset (answerArray,'\0',256);
+    
 
     char *fifoPath = "/tmp/home/richard.mansdoerfer/Desktop/Lab1.c";
     mkfifo(fifoPath, 0777);
@@ -180,7 +182,8 @@ int my_system(char * lineArg){
     //int fd[2];
     //pipe(fd);
     
-    
+    fflush(stdout);
+
     pid_t pid =fork();
 
 
@@ -199,6 +202,7 @@ int my_system(char * lineArg){
         dup2(fd, STDOUT_FILENO);
 
         if (strcmp(args[0],"history")==0){
+                
                 history(historyList, lastChar);
         }
 
@@ -207,19 +211,17 @@ int my_system(char * lineArg){
         }    
         
         else if(execvp(args[0], &args[0])!=-1){
-             printf("Input Error");
+             printf("%s","Input Error");
         }
 
         
         else {
-             printf("Command does not exist \n"); 
+             printf("%s","Command does not exist \n"); 
         }
-        //fgets(answerArray,256, stdout);
-        //write(fd,answerArray,strlen(answerArray));
-       
-        close(fd);
-
+        
         fflush(stdout); 
+
+        close(fd);
 
         recentPID=getpid(); 
         
@@ -241,42 +243,61 @@ int my_system(char * lineArg){
         close(fd);
 
         if (pipedArg==1){
-            pid_t pid2=fork();
-            if (pid2==0){
+            //pid_t pid2=fork();
+           // if (pid2==0){
                 my_system(pipeArgs[0]);
-            }
-            else {
-                waitpid(pid2, &status , 0);
-            }
+            //}
+            //else {
+              //  waitpid(pid2, &status , 0);
+            //}
         
         }
+    
                
     }
 
     return 0;
 }
 
+int history ( char *list[], int currChar){
+
+    int i=currChar+1;
+
+    //printf("%s %d %d", "This is ", i, currChar);
+
+    
+    int records=1;
+
+    //printf("%s",list[1]);
+
+   while(i != currChar){
+        if ((list[i])){ 
+           printf("%s %d %s \n", "Record Number : ", records, list[i]); 
+           records++;
+        }
+        printf("%d", i);
+        i=(i+1)%100;
+    }
+    
+    printf("%s", "Done");
+ 
+    return 1;
+}
+
 int chDirect(char *test []) { 
-    
-    char direction [256];
-    
-    //while (test[i]!=0){
-    //    printf("%s", test[i]);
-        //direction[i-1]=&test[i];
-        //i++;
-   // }
-    
-    //char *newArr = strcat(buf, "chdir ");
-    //fix = strcat(newArr, test[1]);
-    
+
+
+    if (test[1]==NULL){
+        if(chdir("..")==0){
+            printf("%s\n", "Directory is ..");
+        }
+    }
 
     if(chdir(test[1])==0){
         printf("%s%s\n", "Directory is ", test[1]);
     }
     else {
         printf("%s%s\n", "Error the following directory does not exist: ", test[1]);
-        lastChar=lastChar-1;
-        
     }
     
     // /tmp/home/richard.mansdoerfer/Desktop/ECSE 427
@@ -284,20 +305,3 @@ int chDirect(char *test []) {
     return 0;
 }
 
-int history ( char *list[], int currChar){
-    printf("%d %s", currChar, " current value" );
-
-    int i=currChar+1;
-    int records=1;
-    printf("%s", list[2]);
-
-    while(i != currChar){
-        if (sizeof(list[i])>1){
-            printf("%s %d %s \n", "Record Number : ", records, list[i]);
-            records++;
-        }
-        i=(i+1)%100;
-    }
-    
-    return 1;
-}
