@@ -156,7 +156,7 @@ int my_system(char * lineArg){
         }
     }
 
-    historyList[lastChar]=args[0];
+    historyList[lastChar%100]=args[0];
     lastChar=(lastChar+1);
 
     if (pipedArg==1){
@@ -263,7 +263,17 @@ int my_system(char * lineArg){
 
 int history (char * commandList [], int thisChar){
 
+
+    printf("%d", thisChar);
     int i=thisChar+1;
+    int tempStart;
+    if (thisChar>99){
+        tempStart=thisChar%100+1;
+    }
+    else {
+        tempStart = 0;
+    }
+    printf("%d", tempStart);
 
     //printf("%s %d %d", "This is ", i, currChar);
     
@@ -271,31 +281,26 @@ int history (char * commandList [], int thisChar){
     int records=1;
     //printf("%d",commandList[0][0]);
 
-        
-   while(i != thisChar){
-        char thisBuff [256];
-        int j=0;
-        if(commandList[i] == NULL){
-            
-        }
-        
-        else { 
-            while (commandList[i][j]!='\0'){
-                thisBuff[j]=commandList[i][j];
-                j++;
-                }
-            thisBuff[j+1]='\0';
-            printf("%s %d %s", " \t Record Number : ", records, thisBuff);
-            printf("%s", "\n"); 
-            //fflush(stdout);
-            records++;
-        }
-        //printf("%d", i);
-        i=(i+1)%100;
+    while (tempStart > thisChar && tempStart < 100) {
 
     }
+
     
-    printf("%s", "\tDone\n");
+    while (tempStart<thisChar){
+        char thisBuff [10000];
+        int j=0;
+        while (commandList[tempStart][j]!='\0'){
+            thisBuff[j]=commandList[tempStart][j];
+            j++;
+            }
+        thisBuff[j]='\0';
+        printf("%s %d %s %s %s", "\tRecord Number ", records, " : ", thisBuff, " || ");
+        records++;
+        tempStart++; 
+        //printf("%d", tempStart);
+    }
+    
+   // printf("%s", "\tDone\n");
  
     return 1;
 }
@@ -320,5 +325,3 @@ int chDirect(char *test []) {
     
     return 0;
 }
-
-
