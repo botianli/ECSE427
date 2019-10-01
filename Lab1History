@@ -1,69 +1,60 @@
-#include <fcntl.h>
-#include <sched.h>
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h> 
-#include <sys/wait.h>
-#include <time.h> 
-#include <unistd.h>
+#include <fcntl.h> //Defines requests for open
+#include <sched.h> // Scheduling priority (FIFO)
+#include <signal.h> // Signal handler
+#include <stdio.h> // Defines file and size type
+#include <stdlib.h> // Defines size of
+#include <string.h> // Various string functions 
+#include <sys/stat.h> // Returns file attributes about question
+#include <sys/types.h> // pidt's
+#include <sys/wait.h> // Wait pids
+#include <unistd.h> // Fork, execvp
  
-
-
-
-
-
-
-
+//Define functions earlier in system
 
 int get_a_line();
 int my_system();
 int history (char * commandList [], int currChar);
 int chDirect(char * args []);
 
-char * historyList[100];
-int lastChar = 0;
-int recentPID = 0;
-char thisBuff [4096];
+//Define global variables 
 
- int fd;
-    
+char * historyList[100];   // Used for history function
+int lastChar = 0;
+char historyBuff [4096];       // Buffer used for history printouts 
+int recentPID = 0;         // Used to kill pids
+
+ int fd;            // Fifo (currently set to personal address)
  char *fifoPath = "/tmp/home/richard.mansdoerfer/Desktop/Lab1.c";
  
 
 
 
 
-void zHandler (int check){
-    signal(SIGINT, SIG_IGN);
+void zHandler (int check){ // Z Handler
+    signal(SIGINT, SIG_IGN); // Ignores further inputs for ctrl c/z
     signal(SIGTSTP, SIG_IGN);
     
-    signal(SIGTSTP, zHandler);
+    signal(SIGTSTP, zHandler); // Reactivates signal 
 
     printf(" : This system ignores that command! \n");
     fflush(stdout);
 }
 
+void cHandler(int sigCheck){
 
-void intHandler2(int sigCheck){
-
-    char c; 
-
-    signal(SIGINT, SIG_IGN);
+    signal(SIGINT, SIG_IGN); // Ignores further inputs for ctrl c/z
     signal(SIGTSTP, SIG_IGN);
 
-    printf("Do you want to quit the program right now? Please input : [y/n] ");
+    printf(" : Do you want to quit the program? Please input ( Y or N) : ");
     
-    
-    c =getchar();
+    char controlChar;             // User input char
+    controlChar =getchar();
 
-    if (c=='y' || c == 'Y'){
+    if (controlChar=='Y' || controlChar == 'y'){ // Following inputs exit system
         exit(0);
     }
     else {
-        signal(SIGINT, intHandler2);
+        signal(SIGINT, cHandler); // System resumes, signal restarts
     }
     getchar();
 }
@@ -72,245 +63,243 @@ void intHandler2(int sigCheck){
 
 void main() {
      
-    mkfifo(fifoPath, 0777);
-
+    mkfifo(fifoPath, 0777); // Builds fifo
 
     while(1){
-        char *line = NULL;
+        char *line = NULL; 
         size_t n; 
 
-       //if(get_a_line(&line, &n, stdin)==-1){
-        if (getline(&line, &n, stdin)==-1){
+        if(get_a_line(&line, &n, stdin)==-1){ //Gets line from input
+        //if (getline(&line, &n, stdin)==-1){ // Used this to check get_a_line
             perror("Error Does not end");
             exit(0);
         }
-        if (strlen(line)>1){
+        if (strlen(line)>1){ //Valid input is sent to system
             my_system(line);
         }
-        else {
+        else { // Exits if return is pressed
             exit(0);
         }
     }
 }
 
 
-int get_a_line(char** pointerL, size_t *n, FILE *in){
+int get_a_line(char** pntLine, size_t *n, FILE *in){ // Gets line from input, returns appropriate line 
     char line [128];
-    fgets(line, 128, in);
-    unsigned int pointerLength;
-    pointerLength=strlen(line); 
-    char * pointer;
-    pointer=strchr(line, '\n');
-    if (pointer==NULL){
-        *pointer = '\0';
+    fgets(line, 128, in); // sends stdin into line 
+    
+    unsigned int pntLen;
+    pntLen=strlen(line); //length of input
+    
+    char * pntEnd;
+    pntEnd=strchr(line, '\n'); //searches for first occurence of \n
+    
+    if (pntEnd==NULL){
+        *pntEnd = '\0'; // Sets end of line if no return is given
     }
-    if ((pointerLength+1)<256){
-        pointer=realloc(*pointerL, 256);
-        if (pointer==NULL){
+    if ((pntLen+1)<128){ 
+        pntEnd=realloc(*pntLine, 128);
+        if (pntEnd==NULL){
             return (-1);
         }
-        *pointerL=pointer;
+        *pntLine=pntEnd;
         *n=128;
     }
-    strcpy(*pointerL, line);
+    strcpy(*pntLine, line); //Stores to line
     return 1;
 }
 
-
-
 int my_system(char * lineArg){
 
-    signal(SIGINT, intHandler2);
+    signal(SIGINT, cHandler); // Signals for ctrl c/z are active
     signal(SIGTSTP, zHandler);
 
 
-
-    char * args [128];
+    char * args [128];        // Resets argument for input  
     memset (args,'\0',128);
     
-    char * pipeArgs [128];
+    char * pipeArgs [128];     // Arguments for piped inputs
 
-    char* token ;
+    char  buffer [4096];        // Buffer to print at end
+    memset (buffer,'\0',4096);  // (Buffer is very big since I struggled)
+                                // with setting up a proper smaller buffer and 
+                                // ran out of time
+     
+    int argsIndex=0;           // Indexes for arg and pipe for line parse
+    int pipeIndex=0; 
+    int isPiped=0;             // Acts as boolean if pipe has been parsed 
 
-    char * nextTok; 
     
+    int status;                 // Status of PID for kill
     
-    int tokenIndex=0;
+    char* token;                    // Token for arg, arg is broken by the " ", "\n", and "\t" inputs
+    token=strtok(lineArg," \n\t");  // lineArg is only input once in strtok, only has to be referred to as NULL in future uses
 
-    int pipedIndex=0;
-
-    int status; 
-
-    int pipedArg=0;
-
-    char  buffer [4096];
-    memset (buffer,'\0',4096);
-
-
-    token=strtok(lineArg," \n\t");
-
-    while(token !=NULL){
+    while(token !=NULL){        // Parsing sequence until no more tokens are available from line 
        
-        if (pipedArg==1){
-            pipeArgs[pipedIndex++]=token;
+        if (isPiped==1){                   // Piped args parsing, occurs once a '|' is seen
+            pipeArgs[pipeIndex++]=token;      // Simple parsing, token is placed in char * []
             token = strtok(NULL," \n\t");
             
         }
         else {
-            args[tokenIndex++] = token;
-            if ((strcmp(args[tokenIndex-1],"|"))==0 ){
-                   pipedArg=1;
+            args[argsIndex++] = token;         // Regular parsing of token 
+            if ((strcmp(args[argsIndex-1],"|"))==0 ){ // If '|' is seen, switches to isPiped parsing 
+                   isPiped=1;
             }
-            token = strtok(NULL," \n\t");       
+            token = strtok(NULL," \n\t");       // Continues parsing for args
         }
     }
 
-    historyList[lastChar%100]=args[0];
-    lastChar=(lastChar+1);
+    historyList[lastChar%100]=args[0];      // History function stores recent arg input, lastChar is % due to lastChar allowing to increment beyond 100
+    lastChar=(lastChar+1);                  // lastChar is incremented 
 
-    if (pipedArg==1){
-        args[tokenIndex-1]='\0';
+    if (isPiped==1){
+        args[argsIndex-1]='\0';             // Sets end for args index one index earlier if piped (math worked out this way above)
     }
     else {
-        args[tokenIndex]='\0';
+        args[argsIndex]='\0';               // Sets end for args index if no piping
     }
-    pipeArgs[pipedIndex]='\0';
-    
-    
-     //int fd;
-    
-    //char *fifoPath = "/tmp/home/richard.mansdoerfer/Desktop/Lab1.c";
-    //mkfifo(fifoPath, 0777);
+    pipeArgs[pipeIndex]='\0';               // Sets end for piped, sets at index 0 if no pipe 
    
-    //int fd[2];
-    //pipe(fd);
+    //int fd[2];                            // Originally (mistakenly) implemented a full piping system instead of FIFO, would switch this to FIFO
+    //pipe(fd);                             // But left this around as reference to what piping would have looked like with this system
     
-    fflush(stdout);
+    fflush(stdout);                         // Flushes stdout (I received misprints at certain times during testing and kept this)
 
-    pid_t pid =fork();
+    pid_t pid =fork();                      // Initiates fork 
 
 
-    if (pid==-1){
+    if (pid==-1){                           // Fork error, ends system (has never happened in testing)
         perror("Error with Fork");
         exit(1);
     }
     
-    else if (pid==0){
+    else if (pid==0){                       // Child phase
 
-       // close(fd[0]); -- Commands for piping procedure 
+       // close(fd[0]);                     // Original piping system start
        // dup2(fd[1], STDOUT_FILENO);
         
-        fd=open(fifoPath, O_WRONLY);
+        fd=open(fifoPath, O_WRONLY);        // Opens fifo to write
         
-        dup2(fd, STDOUT_FILENO);
+        dup2(fd, STDOUT_FILENO);            // Duplicates to fd AND shuts down STDOUT from printing
 
 
-        if (strcmp(args[0],"history")==0){
+        if (strcmp(args[0],"history")==0){ // If history is inputted, history function takes place
                 
                 history(historyList, lastChar);
         }
 
-        else if ((strcmp(args[0],"chdir") ==0) ||(strcmp(args[0],"cd") ==0)) {
+        else if ((strcmp(args[0],"chdir") ==0) ||(strcmp(args[0],"cd") ==0)) { // If cd/chdir is input, cd takes place
                 chDirect(args);
         }    
         
-        else if(execvp(args[0], &args[0])!=-1){
+        else if(execvp(args[0], &args[0])!=-1){ // Standard input execution, returns -1 on input errors (has not occurred) 
              printf("%s","\t Input Error");
         }
 
-        
         else {
-             printf("%s","\t Command does not exist \n"); 
+             printf("%s","\t Command does not exist \n"); // Input does not exist among current commands
         }
         
-        fflush(stdout); 
+        fflush(stdout);                     // Flush stdout (again did this and found some errors reside)
 
-        close(fd);
+        close(fd);                          // Close fifo 
 
-        recentPID=getpid(); 
+        recentPID=getpid();                 // Kill child process
         
         kill(recentPID, SIGKILL);
           
-
     }
 
     else {
 
         
-        // close(fd[1]);   -- Commands for piping procedure
+        // close(fd[1]);                    // Piping inputs to read buffer in previous piping system
         // read(fd[0], buffer, 256);
 
-        fd=open(fifoPath,O_RDONLY);
-        read(fd,buffer,4096);
+        fd=open(fifoPath,O_RDONLY);         // Opens FIFO to read 
+        read(fd,buffer,4096);               // Reads from fd to buffer of size 4096 (honestly went overkill on this)
 
-        if (pipedArg==1) {
-            my_system(pipeArgs[0]);
+        if (isPiped==1) {                   // If system has piped args from earlier, throws piped argument back into system
+            my_system(pipeArgs[0]);         // Could not figure out how to transport data from fifo to a recursive call of the argument and how to access it
         }
-        else {
+        else {                              // Prints data originally from fd now from the buffer
             printf("%s", buffer);
         }
         
-        close(fd);
+        close(fd);                          // Closes fifo 
     
     }
 
     return 0;
 }
 
-int history (char * commandList [], int thisChar){
+int history (char * commandList [], int thisChar){ // Keeps history of all command arguments inputted (even failed ones)
 
-
-    int i=thisChar+1;
-    int tempStart;
-    if (thisChar>99){
-        tempStart=thisChar%100+1;
+    int tempStart;                          // Initializes variable where history will start reading
+    
+    if (thisChar>99){                       //T his char is not reset to 0 so history output is simpler
+        tempStart=thisChar%100+1;           //If char has looped around, tempStart is at the oldest spot in history and read forward
     }
-    else {
+    
+    else {                                  // If thisChar has not reached 100, oldest arg in history is at point 0 
         tempStart = 0;
     }
 
-    int records=1;
-
-    while (tempStart > thisChar && tempStart < 100) {
-
-    }
+    int records=1;                          // Number used when printing to indicate how many records have been printed
     
-    while (tempStart<thisChar){
-        //char thisBuff [10000];
+
+
+
+    while (tempStart > thisChar && tempStart < 100) { //Runthrough when lastChar is 100+ 
+        int k=0;
+        while (commandList[tempStart][k]!='\0'){ // Reading function (struggled in coverting char * [] to string)
+            historyBuff[k]=commandList[tempStart][k];
+            k++;
+            }
+        historyBuff[k]='\0';                    // Ends string in history buff
+        printf("%s %d %s %s", " Hist ", records, historyBuff, " || "); // Prints history 
+        records++;                              
+        tempStart++; 
+    } 
+    
+    tempStart=0;                                // Resets start at 0 
+
+    while (tempStart<thisChar){                 // Same function as above (could have figured out how to remove redundancy)
         int j=0;
         while (commandList[tempStart][j]!='\0'){
-            thisBuff[j]=commandList[tempStart][j];
+            historyBuff[j]=commandList[tempStart][j];
             j++;
             }
-        thisBuff[j]='\0';
-        printf("%s %d %s %s", " Hist ", records, thisBuff, " || ");
+        historyBuff[j]='\0';
+        printf("%s %d %s %s", " Hist ", records, historyBuff, " || ");
         records++;
         tempStart++; 
     }
     
-    printf("%s", "\n");
-   // printf("%s", "\tDone\n");
+    printf("%s", "\n");                 // Creates break after last entry 
  
     return 1;
 }
 
-int chDirect(char *test []) { 
+int chDirect(char *test []) {           // Chdir (cd) function 
 
 
-    if (test[1]==NULL){
+    if (test[1]==NULL){                 // If no input after chdir, basic cd request is made
         if(chdir("..")==0){
             printf("%s\n", "\t Directory is ..");
         }
     }
 
-    if(chdir(test[1])==0){
+    if(chdir(test[1])==0){              // If directory is found with chdir, directory is set
         printf("%s%s\n", " \t Directory is ", test[1]);
     }
-    else {
+    else {                              // Directory could not be found with chdir 
         printf("%s%s\n", "\t Error the following directory does not exist: ", test[1]);
     }
     
-    // /tmp/home/richard.mansdoerfer/Desktop/ECSE 427
+    // /tmp/home/richard.mansdoerfer/Desktop/ECSE 427 : My personal working directory to check code
     
     return 0;
 }
