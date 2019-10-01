@@ -17,7 +17,7 @@
 
 int get_a_line();
 int my_system();
-int history (int currChar);
+int history (char * historyList [], int currChar);
 int chDirect(char * args []);
 
 char * historyList[100];
@@ -200,7 +200,7 @@ int my_system(char * lineArg){
 
         if (strcmp(args[0],"history")==0){
                 
-                history(lastChar);
+                history(historyList, lastChar);
         }
 
         else if (strcmp(args[0],"chdir")==0){
@@ -256,7 +256,7 @@ int my_system(char * lineArg){
     return 0;
 }
 
-int history ( int currChar){
+int history (char * historyList [], int currChar){
 
     int i=currChar+1;
 
@@ -270,7 +270,7 @@ int history ( int currChar){
    while(i != currChar){
         if ((historyList[i])){ 
            printf("%s %d %s", "Record Number : ", records, historyList[i]);
-           printf("%s", " "); 
+           printf("%s", "\n"); 
            fflush(stdout);
            records++;
         }
@@ -303,5 +303,6 @@ int chDirect(char *test []) {
     
     return 0;
 }
+
 
 
