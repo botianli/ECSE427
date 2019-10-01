@@ -209,7 +209,7 @@ int my_system(char * lineArg){
                 history(historyList, lastChar);
         }
 
-        else if (strcmp(args[0],"chdir")==0){
+        else if ((strcmp(args[0],"chdir") ==0) ||(strcmp(args[0],"cd") ==0)) {
                 chDirect(args);
         }    
         
@@ -275,14 +275,11 @@ int history (char * commandList [], int thisChar){
         tempStart = 0;
     }
 
-    
-
     int records=1;
 
     while (tempStart > thisChar && tempStart < 100) {
 
     }
-
     
     while (tempStart<thisChar){
         //char thisBuff [10000];
@@ -297,6 +294,7 @@ int history (char * commandList [], int thisChar){
         tempStart++; 
     }
     
+    printf("%s", "\n");
    // printf("%s", "\tDone\n");
  
     return 1;
