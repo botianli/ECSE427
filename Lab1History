@@ -1,14 +1,17 @@
+#include <fcntl.h>
 #include <sched.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h> //for fork
-#include <unistd.h> //for fork and vfork
-#include <sys/wait.h> //for waitpid
-#include <time.h> //for timing
 #include <sys/stat.h>
-#include <fcntl.h>
+#include <sys/types.h> 
+#include <sys/wait.h>
+#include <time.h> 
+#include <unistd.h>
+ 
+
+
 
 
 
@@ -24,6 +27,12 @@ char * historyList[100];
 int lastChar = 0;
 int recentPID = 0;
 char thisBuff [4096];
+
+ int fd;
+    
+ char *fifoPath = "/tmp/home/richard.mansdoerfer/Desktop/Lab1.c";
+ 
+
 
 
 
@@ -63,6 +72,8 @@ void intHandler2(int sigCheck){
 
 void main() {
      
+    mkfifo(fifoPath, 0777);
+
 
     while(1){
         char *line = NULL;
@@ -112,7 +123,6 @@ int my_system(char * lineArg){
     signal(SIGINT, intHandler2);
     signal(SIGTSTP, zHandler);
 
-   // printf("%s%s", "At My system : ", lineArg);
 
 
     char * args [128];
@@ -143,18 +153,15 @@ int my_system(char * lineArg){
        
         if (pipedArg==1){
             pipeArgs[pipedIndex++]=token;
-            //printf("%s", pipeArgs[pipedIndex-1]);
             token = strtok(NULL," \n\t");
-            //token = strtok(NULL," \n\t");
             
         }
         else {
             args[tokenIndex++] = token;
-            //printf("%s", args[tokenIndex-1]);
             if ((strcmp(args[tokenIndex-1],"|"))==0 ){
                    pipedArg=1;
             }
-            token = strtok(NULL," \n\t");
+            token = strtok(NULL," \n\t");       
         }
     }
 
@@ -169,18 +176,12 @@ int my_system(char * lineArg){
     }
     pipeArgs[pipedIndex]='\0';
     
-
-
     
-    //printf("%s%s","This is ", args[0]);
-
-    int fd;
+     //int fd;
     
-
-    char *fifoPath = "/tmp/home/richard.mansdoerfer/Desktop/Lab1.c";
-    mkfifo(fifoPath, 0777);
-
-
+    //char *fifoPath = "/tmp/home/richard.mansdoerfer/Desktop/Lab1.c";
+    //mkfifo(fifoPath, 0777);
+   
     //int fd[2];
     //pipe(fd);
     
@@ -242,22 +243,15 @@ int my_system(char * lineArg){
         fd=open(fifoPath,O_RDONLY);
         read(fd,buffer,4096);
 
-        printf("%s", buffer);
-
-        close(fd);
-
-        if (pipedArg==1){
-            //pid_t pid2=fork();
-           // if (pid2==0){
-                my_system(pipeArgs[0]);
-            //}
-            //else {
-              //  waitpid(pid2, &status , 0);
-            //}
-        
+        if (pipedArg==1) {
+            my_system(pipeArgs[0]);
         }
+        else {
+            printf("%s", buffer);
+        }
+        
+        close(fd);
     
-               
     }
 
     return 0;
