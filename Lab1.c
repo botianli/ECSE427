@@ -13,13 +13,12 @@
 
 char * historyList[100];
 int lastChar = 0;
-char *tempChar;
 int recentPID = 0;
 
 
 int get_a_line();
 int my_system();
-int history();
+int history (char *list[], int currChar);
 int chDirect(char * args []);
 
 
@@ -61,13 +60,13 @@ void main() {
      
     fflush(stdout);
     fflush(stdin);
-    char *fifoPath = "/tmp/user/richard.mansdoerfer/Desktop/ECSE427";
-    mkfifo(fifoPath, 0777);
+
+    
+    
 
     while(1){
         char *line = NULL;
         size_t n; 
-        int i = 0;
         fflush(stdout);
 
        //if(get_a_line(&line, &n, stdin)==-1){
@@ -75,11 +74,7 @@ void main() {
             perror("Error Does not end");
             exit(0);
         }
-
-
-
         if (strlen(line)>1){
-            //printf("%ld", strlen(line));
             my_system(line);
         }
         else {
@@ -116,7 +111,7 @@ int my_system(char * lineArg){
     signal(SIGINT, intHandler2);
     signal(SIGTSTP, zHandler);
 
-    printf("%s%s", "At My system : ", lineArg);
+   // printf("%s%s", "At My system : ", lineArg);
 
     char * args [128];
     
@@ -134,7 +129,7 @@ int my_system(char * lineArg){
 
     int pipedArg=0;
 
-    char  * buffer ;
+    char  buffer [256];
     memset (buffer,'\0',256);
 
 
@@ -169,16 +164,23 @@ int my_system(char * lineArg){
     pipeArgs[pipedIndex]='\0';
     
 
-    tempChar = historyList[lastChar%100];
-    historyList[lastChar%100]=args[0];
-    lastChar=lastChar+1;
+    historyList[lastChar]=args[0];
+    lastChar=(lastChar+1)%100;
+
+    int fd;
+    char answerArray [256];
+    memset (answerArray,'\0',256);
+
+    char *fifoPath = "/tmp/home/richard.mansdoerfer/Desktop/Lab1.c";
+    mkfifo(fifoPath, 0777);
 
 
-    int fd[2];
-    pipe(fd);
-
-    pid_t pid=fork();
+    //int fd[2];
+    //pipe(fd);
     
+    
+    pid_t pid =fork();
+
 
     if (pid==-1){
         perror("Error with Fork");
@@ -187,12 +189,15 @@ int my_system(char * lineArg){
     
     else if (pid==0){
 
-        close(fd[0]);
-        dup2(fd[1], STDOUT_FILENO);
-
+       // close(fd[0]); -- Commands for piping procedure 
+       // dup2(fd[1], STDOUT_FILENO);
+        
+        fd=open(fifoPath, O_WRONLY);
+        
+        dup2(fd, STDOUT_FILENO);
 
         if (strcmp(args[0],"history")==0){
-                history();
+                history(historyList, lastChar);
         }
 
         else if (strcmp(args[0],"chdir")==0){
@@ -200,32 +205,38 @@ int my_system(char * lineArg){
         }    
         
         else if(execvp(args[0], &args[0])!=-1){
-             perror("Input Error");
+             fprintf(stdout, "Input Error");
         }
 
         
         else {
-                lastChar=lastChar-1;
-                historyList[lastChar%100]=tempChar;
-                perror("Command does not exist"); 
+             fprintf(stdout, "Command does not exist \n"); 
         }
-        
+        //fgets(answerArray,256, stdout);
+        //write(fd,answerArray,strlen(answerArray));
+       
+        close(fd);
+
+        fflush(stdout); 
+
         recentPID=getpid(); 
         
-        kill(recentPID, SIGKILL);    
+        kill(recentPID, SIGKILL);
+          
 
     }
 
     else {
 
-        close(fd[1]);
-        read(fd[0], buffer, 256);
-        
+        // close(fd[1]);   -- Commands for piping procedure
+        // read(fd[0], buffer, 256);
+
+        fd=open(fifoPath,O_RDONLY);
+        read(fd,buffer,256);
+
         printf("%s", buffer);
 
-        //printf("%s", buffer);
-
-      //  waitpid(pid, &status, 0);
+        close(fd);
 
         if (pipedArg==1){
             pid_t pid2=fork();
@@ -237,9 +248,7 @@ int my_system(char * lineArg){
             }
         
         }
-        
-      //printf("%s", "Hello Done With Parent");
-       
+               
     }
 
     return 0;
@@ -248,7 +257,6 @@ int my_system(char * lineArg){
 int chDirect(char *test []) { 
     
     char direction [256];
-    int i=1;
     
     //while (test[i]!=0){
     //    printf("%s", test[i]);
@@ -266,7 +274,7 @@ int chDirect(char *test []) {
     else {
         printf("%s%s\n", "Error the following directory does not exist: ", test[1]);
         lastChar=lastChar-1;
-        historyList[lastChar%100]=tempChar;
+        
     }
     
     // /tmp/home/richard.mansdoerfer/Desktop/ECSE 427
@@ -274,23 +282,19 @@ int chDirect(char *test []) {
     return 0;
 }
 
+int history ( char *list[], int currChar){
+    printf("%d %s", currChar, " current value" );
 
-int history (){
-    printf("\n\n%s", "History of the System Has : ");
-    int temp = lastChar%100;
-    printf("%d %s \n", temp, "entries");
-    while(temp<100){
-        if (historyList[temp]!=NULL){
-            printf("%s\n", historyList[temp]);
+    int i=currChar+1;
+    int records=1;
+
+    while(i != currChar){
+        if (list[i]){
+            printf("%s %d %s \n", "Record Number : ", records, list[i]);
+            records++;
         }
-        temp++;
+        i=(i+1)%100;
     }
-    temp=0;
-    while (temp<(lastChar%100)){
-        if (historyList[temp]!=NULL){
-            printf("%s\n", historyList[temp]);
-        }
-        temp++;
-    }
+    
     return 1;
 }
