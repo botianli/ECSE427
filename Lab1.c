@@ -114,6 +114,7 @@ int my_system(char * lineArg){
    // printf("%s%s", "At My system : ", lineArg);
 
     char * args [128];
+    memset (args,'\0',128);
     
     char * pipeArgs [128];
 
@@ -163,9 +164,10 @@ int my_system(char * lineArg){
     }
     pipeArgs[pipedIndex]='\0';
     
-
     historyList[lastChar]=args[0];
+    printf("%s", historyList[lastChar]);
     lastChar=(lastChar+1)%100;
+    
 
     int fd;
     char answerArray [256];
@@ -205,12 +207,12 @@ int my_system(char * lineArg){
         }    
         
         else if(execvp(args[0], &args[0])!=-1){
-             fprintf(stdout, "Input Error");
+             printf("Input Error");
         }
 
         
         else {
-             fprintf(stdout, "Command does not exist \n"); 
+             printf("Command does not exist \n"); 
         }
         //fgets(answerArray,256, stdout);
         //write(fd,answerArray,strlen(answerArray));
@@ -287,9 +289,10 @@ int history ( char *list[], int currChar){
 
     int i=currChar+1;
     int records=1;
+    printf("%s", list[2]);
 
     while(i != currChar){
-        if (list[i]){
+        if (sizeof(list[i])>1){
             printf("%s %d %s \n", "Record Number : ", records, list[i]);
             records++;
         }
