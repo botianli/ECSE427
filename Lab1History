@@ -285,14 +285,17 @@ int history (char * commandList [], int thisChar){ // Keeps history of all comma
 
 int chDirect(char *test []) {           // Chdir (cd) function 
 
+    if (test[2]!=NULL){
+        printf("%s\n", "\t Error too many arguments inputted");   // Too many arguments inputted
+    }
 
-    if (test[1]==NULL){                 // If no input after chdir, basic cd request is made
+    else if (test[1]==NULL){                 // If no input after chdir, basic cd request is made
         if(chdir("..")==0){
             printf("%s\n", "\t Directory is ..");
         }
     }
 
-    if(chdir(test[1])==0){              // If directory is found with chdir, directory is set
+    else if(chdir(test[1])==0){              // If directory is found with chdir, directory is set
         printf("%s%s\n", " \t Directory is ", test[1]);
     }
     else {                              // Directory could not be found with chdir 
