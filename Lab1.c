@@ -167,7 +167,7 @@ int my_system(char * lineArg){
 
     historyList[lastChar]=args[0];
     lastChar=(lastChar+1);
-    printf("%s%s","This is ", args[0]);
+    //printf("%s%s","This is ", args[0]);
 
     int fd;
     
@@ -198,6 +198,7 @@ int my_system(char * lineArg){
         
         dup2(fd, STDOUT_FILENO);
 
+
         if (strcmp(args[0],"history")==0){
                 
                 history(historyList, lastChar);
@@ -208,12 +209,12 @@ int my_system(char * lineArg){
         }    
         
         else if(execvp(args[0], &args[0])!=-1){
-             printf("%s","Input Error");
+             printf("%s","\t Input Error");
         }
 
         
         else {
-             printf("%s","Command does not exist \n"); 
+             printf("%s","\t Command does not exist \n"); 
         }
         
         fflush(stdout); 
@@ -256,7 +257,7 @@ int my_system(char * lineArg){
     return 0;
 }
 
-int history (char * historyList [], int currChar){
+int history (char * commandList [], int currChar){
 
     int i=currChar+1;
 
@@ -268,8 +269,8 @@ int history (char * historyList [], int currChar){
     //printf("%s",historyList[3]);
     
    while(i != currChar){
-        if ((historyList[i])){ 
-           printf("%s %d %s", "Record Number : ", records, historyList[i]);
+        if ((commandList[i])){ 
+           printf("%s %d %s", " \t Record Number : ", records, commandList[i]);
            printf("%s", "\n"); 
            fflush(stdout);
            records++;
@@ -278,7 +279,7 @@ int history (char * historyList [], int currChar){
         i=(i+1)%100;
     }
     
-    printf("%s", "Done");
+    printf("%s", "\tDone");
  
     return 1;
 }
@@ -288,21 +289,23 @@ int chDirect(char *test []) {
 
     if (test[1]==NULL){
         if(chdir("..")==0){
-            printf("%s\n", "Directory is ..");
+            printf("%s\n", "\t Directory is ..");
         }
     }
 
     if(chdir(test[1])==0){
-        printf("%s%s\n", "Directory is ", test[1]);
+        printf("%s%s\n", " \t Directory is ", test[1]);
     }
     else {
-        printf("%s%s\n", "Error the following directory does not exist: ", test[1]);
+        printf("%s%s\n", "\t Error the following directory does not exist: ", test[1]);
     }
     
     // /tmp/home/richard.mansdoerfer/Desktop/ECSE 427
     
     return 0;
 }
+
+
 
 
 
