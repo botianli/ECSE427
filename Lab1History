@@ -23,6 +23,8 @@ int chDirect(char * args []);
 char * historyList[100];
 int lastChar = 0;
 int recentPID = 0;
+char thisBuff [4096];
+
 
 
 void zHandler (int check){
@@ -131,8 +133,8 @@ int my_system(char * lineArg){
 
     int pipedArg=0;
 
-    char  buffer [256];
-    memset (buffer,'\0',256);
+    char  buffer [4096];
+    memset (buffer,'\0',4096);
 
 
     token=strtok(lineArg," \n\t");
@@ -238,7 +240,7 @@ int my_system(char * lineArg){
         // read(fd[0], buffer, 256);
 
         fd=open(fifoPath,O_RDONLY);
-        read(fd,buffer,256);
+        read(fd,buffer,4096);
 
         printf("%s", buffer);
 
@@ -264,7 +266,6 @@ int my_system(char * lineArg){
 int history (char * commandList [], int thisChar){
 
 
-    printf("%d", thisChar);
     int i=thisChar+1;
     int tempStart;
     if (thisChar>99){
@@ -273,13 +274,10 @@ int history (char * commandList [], int thisChar){
     else {
         tempStart = 0;
     }
-    printf("%d", tempStart);
 
-    //printf("%s %d %d", "This is ", i, currChar);
     
 
     int records=1;
-    //printf("%d",commandList[0][0]);
 
     while (tempStart > thisChar && tempStart < 100) {
 
@@ -287,17 +285,16 @@ int history (char * commandList [], int thisChar){
 
     
     while (tempStart<thisChar){
-        char thisBuff [10000];
+        //char thisBuff [10000];
         int j=0;
         while (commandList[tempStart][j]!='\0'){
             thisBuff[j]=commandList[tempStart][j];
             j++;
             }
         thisBuff[j]='\0';
-        printf("%s %d %s %s %s", "\tRecord Number ", records, " : ", thisBuff, " || ");
+        printf("%s %d %s %s", " Hist ", records, thisBuff, " || ");
         records++;
         tempStart++; 
-        //printf("%d", tempStart);
     }
     
    // printf("%s", "\tDone\n");
