@@ -17,7 +17,7 @@
 
 int get_a_line();
 int my_system();
-int history (char *list[], int currChar);
+int history (int currChar);
 int chDirect(char * args []);
 
 char * historyList[100];
@@ -61,9 +61,6 @@ void intHandler2(int sigCheck){
 
 void main() {
      
-     for (int i=0; i<100; i++){
-         historyList[i]=NULL;
-     }
 
     while(1){
         char *line = NULL;
@@ -203,7 +200,7 @@ int my_system(char * lineArg){
 
         if (strcmp(args[0],"history")==0){
                 
-                history(historyList, lastChar);
+                history(lastChar);
         }
 
         else if (strcmp(args[0],"chdir")==0){
@@ -259,7 +256,7 @@ int my_system(char * lineArg){
     return 0;
 }
 
-int history ( char *list[], int currChar){
+int history ( int currChar){
 
     int i=currChar+1;
 
@@ -268,14 +265,16 @@ int history ( char *list[], int currChar){
     
     int records=1;
 
-    //printf("%s",list[1]);
-
+    //printf("%s",historyList[3]);
+    
    while(i != currChar){
-        if ((list[i])){ 
-           printf("%s %d %s \n", "Record Number : ", records, list[i]); 
+        if ((historyList[i])){ 
+           printf("%s %d %s", "Record Number : ", records, historyList[i]);
+           printf("%s", " "); 
+           fflush(stdout);
            records++;
         }
-        printf("%d", i);
+        //printf("%d", i);
         i=(i+1)%100;
     }
     
@@ -304,4 +303,5 @@ int chDirect(char *test []) {
     
     return 0;
 }
+
 
