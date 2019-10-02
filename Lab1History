@@ -19,6 +19,8 @@ int history (char * commandList [], int currChar);
 int chDirect(char * args []);
 int setLimit ();
 
+struct rlimit rl;
+
 
 //Define global variables 
 
@@ -30,8 +32,6 @@ int recentPID = 0;         // Used to kill pids
  int fd;            // Fifo (currently set to personal address)
  char *fifoPath = "/tmp/home/richard.mansdoerfer/Desktop/Lab1.c";
  
-
-
 
 
 void zHandler (int check){ // Z Handler
@@ -69,6 +69,12 @@ void main() {
      
     mkfifo(fifoPath, 0777); // Builds fifo
 
+    getrlimit (RLIMIT_DATA, &rl);
+
+    //rl.rlim_cur   Soft limit
+    // rl.rlim_max    Hard limit
+
+   
     while(1){
         char *line = NULL; 
         size_t n; 
@@ -204,11 +210,11 @@ int my_system(char * lineArg){
         
         
         else if(execvp(args[0], &args[0])!=-1){ // Standard input execution, returns -1 on input errors (has not occurred) 
-             printf("%s","\t Input Error");
+             perror("\t Input Error ");
         }
 
         else {
-             printf("%s","\t Command does not exist \n"); // Input does not exist among current commands
+             perror("\t Command does not exist "); // Input does not exist among current commands
         }
         
         fflush(stdout);                     // Flush stdout (again did this and found some errors reside)
@@ -229,14 +235,17 @@ int my_system(char * lineArg){
 
         fd=open(fifoPath,O_RDONLY);         // Opens FIFO to read 
         read(fd,buffer,4096);               // Reads from fd to buffer of size 4096 (honestly went overkill on this)
-
-        if (isPiped==1) {                   // If system has piped args from earlier, throws piped argument back into system
-            my_system(pipeArgs[0]);         // Could not figure out how to transport data from fifo to a recursive call of the argument and how to access it
+        
+        
+        if (isPiped==1) {                    // If system has piped args from earlier, throws piped argument back into system
+            if(execvp(buffer, &pipeArgs[0])!=-1){
+               perror("\t Input Error "); 
+            }                              // Could not figure out how to transport data from fifo to a recursive call of the argument and how to access it
         }
         else {                              // Prints data originally from fd now from the buffer
             printf("%s", buffer);
         }
-        
+
         close(fd);                          // Closes fifo 
     
     }
@@ -293,7 +302,7 @@ int history (char * commandList [], int thisChar){ // Keeps history of all comma
 int chDirect(char *test []) {           // Chdir (cd) function 
 
     if (test[2]!=NULL){
-        printf("%s\n", "\t Error too many arguments inputted");   // Too many arguments inputted
+        perror("\t Error too many arguments inputted ");   // Too many arguments inputted
     }
 
     else if (test[1]==NULL){                 // If no input after chdir, basic cd request is made
@@ -306,7 +315,7 @@ int chDirect(char *test []) {           // Chdir (cd) function
         printf("%s%s\n", " \t Directory is ", test[1]);
     }
     else {                              // Directory could not be found with chdir 
-        printf("%s%s\n", "\t Error the following directory does not exist: ", test[1]);
+        perror("\t Error the following directory does not exist ");
     }
     
     // /tmp/home/richard.mansdoerfer/Desktop/ECSE 427 : My personal working directory to check code
