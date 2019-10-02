@@ -17,9 +17,9 @@ int get_a_line();
 int my_system();
 int history (char * commandList [], int currChar);
 int chDirect(char * args []);
-int setLimit ();
+int limit (char * args[]);
 
-struct rlimit rl;
+struct rlimit rLimit;
 
 
 //Define global variables 
@@ -68,13 +68,8 @@ void cHandler(int sigCheck){
 void main() {
      
     mkfifo(fifoPath, 0777); // Builds fifo
-
-    getrlimit (RLIMIT_DATA, &rl);
-
-    //rl.rlim_cur   Soft limit
-    // rl.rlim_max    Hard limit
-
-   
+    getrlimit(RLIMIT_DATA, &rLimit); // Sets initial r limit to data
+    
     while(1){
         char *line = NULL; 
         size_t n; 
@@ -205,7 +200,7 @@ int my_system(char * lineArg){
         }
 
         else if ((strcmp(args[0], "limit"))==0){ // setLimit function
-                setLimit();
+                limit(args);
         }
         
         
@@ -323,6 +318,14 @@ int chDirect(char *test []) {           // Chdir (cd) function
     return 0;
 }
 
-int setLimit (){
+int limit (char * args []){ // Limit sets limit for the processes
+    int limit = atoi(args[1]); // Takes an int of the limit passed
+    if (limit>rLimit.rlim_max){ // Checks if limit passed is greater than current limit
+        perror("Set limit is lower than new limit ");
+    }                           //This process currently does not work, I believe I am incorrectly comparing limit to rlimit max
+    else {  
+        setrlimit(limit, &rLimit); // Sets new limit
+        printf("%s %d \n", "\t Limit has been set to ", limit);
+    }
     return 0;
 }
