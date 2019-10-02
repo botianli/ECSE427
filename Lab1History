@@ -1,10 +1,12 @@
 #include <fcntl.h> //Defines requests for open
+#include <sys/resource.h> // For system limit
 #include <sched.h> // Scheduling priority (FIFO)
 #include <signal.h> // Signal handler
 #include <stdio.h> // Defines file and size type
 #include <stdlib.h> // Defines size of
 #include <string.h> // Various string functions 
 #include <sys/stat.h> // Returns file attributes about question
+#include <sys/time.h> //System limit
 #include <sys/types.h> // pidt's
 #include <sys/wait.h> // Wait pids
 #include <unistd.h> // Fork, execvp
@@ -15,6 +17,8 @@ int get_a_line();
 int my_system();
 int history (char * commandList [], int currChar);
 int chDirect(char * args []);
+int setLimit ();
+
 
 //Define global variables 
 
@@ -192,7 +196,12 @@ int my_system(char * lineArg){
 
         else if ((strcmp(args[0],"chdir") ==0) ||(strcmp(args[0],"cd") ==0)) { // If cd/chdir is input, cd takes place
                 chDirect(args);
-        }    
+        }
+
+        else if ((strcmp(args[0], "limit"))==0){ // setLimit function
+                setLimit();
+        }
+        
         
         else if(execvp(args[0], &args[0])!=-1){ // Standard input execution, returns -1 on input errors (has not occurred) 
              printf("%s","\t Input Error");
@@ -250,8 +259,6 @@ int history (char * commandList [], int thisChar){ // Keeps history of all comma
     int records=1;                          // Number used when printing to indicate how many records have been printed
     
 
-
-
     while (tempStart > thisChar && tempStart < 100) { //Runthrough when lastChar is 100+ 
         int k=0;
         while (commandList[tempStart][k]!='\0'){ // Reading function (struggled in coverting char * [] to string)
@@ -304,5 +311,9 @@ int chDirect(char *test []) {           // Chdir (cd) function
     
     // /tmp/home/richard.mansdoerfer/Desktop/ECSE 427 : My personal working directory to check code
     
+    return 0;
+}
+
+int setLimit (){
     return 0;
 }
