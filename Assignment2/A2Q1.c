@@ -5,6 +5,7 @@
 #include <time.h>
 #include <stdlib.h>
 
+
 void *reader(void * ) ;         // Initiates reader and writer methods
 void *writer (void * ) ;        
 
