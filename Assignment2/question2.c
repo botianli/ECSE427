@@ -11,7 +11,7 @@ void *writer (void * ) ;
 int readCount=0;                // Initiates readCount (reader) and global count 
 static int glob = 0;  
 
-static sem_t rw_mutex,mutex ;   // Semaphore values 
+static sem_t resoureAccess, readCountAccess, serviceQueue ;   // Semaphore values 
 
 static long maxWriting = 0;         // Initial value for writer threads, includes statistic counts and writer thread counts 
 static long minWriting = 100000000;
@@ -31,17 +31,20 @@ void * reader(void * arg) {         // Reader thread process
 
     while (readerIter>0){           // While loop through reader interation count 
 
+        sem_wait(&serviceQueue);
+
         clock_t timerStartR = clock();      // Start clock for reader thread 
 
-        sem_wait(&mutex);                   // Lock shared file for reader  
+        sem_wait(&readCountAccess);                   // Lock shared file for reader  
 
         readCount++;                        
 
         if(readCount ==1 ){                 // Lock shared file for reader+writer if count is 1 
-            sem_wait(&rw_mutex);
+            sem_wait(&resoureAccess);
         }
 
-        sem_post(&mutex);                   // Unlock shared file for writer 
+        sem_post(&serviceQueue);                   // Unlock shared file for writer 
+        sem_post(&readCountAccess);                   // Unlock shared file for writer 
 
         clock_t fullTimeR = clock()-timerStartR;        // End clock, calculate difference 
         long microsecR = fullTimeR*1000000/CLOCKS_PER_SEC;  //Calculate process time in microseconds
@@ -60,14 +63,14 @@ void * reader(void * arg) {         // Reader thread process
         int random = (rand() %100 + 1)*1000; // Random sleep time between 1-100 milliseconds
         usleep(random);             
         
-        sem_wait(&mutex);                   // Lock shared file for reader
+        sem_wait(&readCountAccess);                   // Lock shared file for reader
 
         readCount--;
         if (readCount == 0){                // Unlock shared file for reader/writer if count is 0 
-            sem_post(&rw_mutex);
+            sem_post(&resoureAccess);
         }
 
-        sem_post(&mutex);                   // Unlock shared file for reader 
+        sem_post(&readCountAccess);                   // Unlock shared file for reader 
 
         readerIter--;
     }
@@ -79,10 +82,13 @@ void *writer (void * arg) {         // Writer thread process
     int loc ;
 
     while (writerIter>0){
-    
-        clock_t timerStartW = clock();  // Take initial clock value before writer thread 
-        sem_wait(&rw_mutex);            // Lock rw_mutex shared file 
+        
+        sem_wait(&serviceQueue);
 
+        clock_t timerStartW = clock();  // Take initial clock value before writer thread 
+        sem_wait(&resoureAccess);            // Lock rw_mutex shared file 
+
+        sem_post(&serviceQueue);
 
         int random = (rand() %100 + 1)*1000;    // Random sleep value 
         usleep(random);
@@ -91,7 +97,7 @@ void *writer (void * arg) {         // Writer thread process
         loc = loc+10;
         glob = loc;
 
-        sem_post(&rw_mutex);            // Unlock rw_mutex shared file 
+        sem_post(&resoureAccess);            // Unlock rw_mutex shared file 
         
         clock_t fullTimeW = clock()-timerStartW; // Ends clock, calculates difference between start and end 
         long microsecW = fullTimeW*1000000/CLOCKS_PER_SEC; // Adjusts clock time for microsec 
@@ -141,11 +147,15 @@ int main(int argCount, char * argv[])  {    // Takes command arguments, creates 
 
     pthread_t rThreads[rThreadCount+1], wThreads[wThreadCount+1]; // Creates p_thread of writer and reader counts 
 
-    if (sem_init(&rw_mutex, 0, 1) == -1) {  // Initializes rw_mutex semaphore
+    if (sem_init(&serviceQueue, 0, 1) == -1) {  // Initializes service queue semaphore
         printf("Error, init semaphore\n");
         exit(1);
     }
-    if (sem_init(&mutex, 0, 1) == -1) {     // Initializes mutex semaphore
+    if (sem_init(&resoureAccess, 0, 1) == -1) {     // Initializes resource access semaphore
+        printf("Error, init semaphore\n");
+        exit(1);
+    }
+    if (sem_init(&readCountAccess, 0, 1) == -1) {     // Initializes resource access semaphore
         printf("Error, init semaphore\n");
         exit(1);
     }
