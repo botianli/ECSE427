@@ -5,7 +5,6 @@
 #include <time.h>
 #include <stdlib.h>
 
-
 void *reader(void * ) ;         // Initiates reader and writer methods
 void *writer (void * ) ;        
 
@@ -115,7 +114,7 @@ void *writer (void * arg) {         // Writer thread process
 
 int main(int argCount, char * argv[])  {    // Takes command arguments, creates thread processes, displays thread statistics 
 
-    if (argCount<2){                            // Checks if too few inputs are given 
+    if (argCount<3){                            // Checks if too few inputs are given 
         printf("\nNot enough arguments\n\n");
         exit(1);
     }
