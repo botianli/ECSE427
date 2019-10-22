@@ -134,7 +134,7 @@ int main(int argCount, char * argv[])  {    // Takes command arguments, creates 
         exit(1);
     }
 
-    int loops = 100000;
+    int nullInput = 0;
     int rThreadCount=500;       // Number of reader threads
     int wThreadCount=10;        // Number of writer threads
     int i;                      // Variable to increment threads 
@@ -151,7 +151,7 @@ int main(int argCount, char * argv[])  {    // Takes command arguments, creates 
     }
 
     for (i=0; i<rThreadCount; i++){         // Creates reader threads 
-        if(pthread_create(&rThreads[i], NULL, reader, &loops)){
+        if(pthread_create(&rThreads[i], NULL, reader, &nullInput)){
               printf("Error, creating threads\n");
               exit(1);
         }
@@ -159,7 +159,7 @@ int main(int argCount, char * argv[])  {    // Takes command arguments, creates 
     }
 
     for (i=0; i<wThreadCount; i++){         // Creates writer threads 
-        if(pthread_create(&wThreads[i], NULL, writer, &loops)){
+        if(pthread_create(&wThreads[i], NULL, writer, &nullInput)){
               printf("Error, creating threads\n");
               exit(1);
         }
