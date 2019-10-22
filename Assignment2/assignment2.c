@@ -83,12 +83,62 @@ int main()  {
     int readCount=0;
     int writeCount=0;
 
+  
+   
+
+    int s;
+    int error;
+    int loops = 100000;
+    int rThreadCount=3;
+    int wThreadCount=2;
+
+   // /*
+
+    printf("HELLO AT BEGINNING");
+
+    pthread_t rThreads[rThreadCount], wThreads[wThreadCount];
+
+    printf("HELLO AT READ THREADS");
+
+    for (s=0; s<rThreadCount; s++){
+        error = pthread_create(&rThreads[s], NULL, reader, &loops);
+        if (error != 0) {
+              printf("Error, creating threads\n");
+              exit(1);
+        }
+    }
+
+    printf("HELLO PAST READ THREADS");
+
+    for (s=0; s<wThreadCount; s++){
+        error = pthread_create(&wThreads[s], NULL, writer, &loops);
+        if (error != 0) {
+              printf("Error, creating threads\n");
+              exit(1);
+        }
+    }
+
+    printf("HELLO PAST WRITE THREADS");
+    
+    for (s=0; s<rThreadCount; s++){
+        error = pthread_join(rThreads[s], NULL);
+        if (error != 0) {
+              printf("Error, creating threads\n");
+              exit(1);
+        }
+    }
+    for (s=0; s<wThreadCount; s++){
+        error = pthread_join(wThreads[s], NULL);
+        if (error != 0) {
+              printf("Error, creating threads\n");
+              exit(1);
+        }
+    }
+
+   // */
+    /*
 
     pthread_t t1, t2, t3, t4, t5;
-  
-    int s;
-    int loops = 100000;
-
   if (sem_init(&rw_mutex, 0, 1) == -1) {
     printf("Error, init semaphore\n");
     exit(1);
@@ -156,6 +206,7 @@ int main()  {
     printf("Error, creating threads\n");
     exit(1);
   }
+  */
 
   printf("glob value %d \n", glob);
   exit(0);
