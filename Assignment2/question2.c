@@ -31,7 +31,7 @@ void * reader(void * arg) {         // Reader thread process
 
     while (readerIter>0){           // While loop through reader interation count 
 
-        sem_wait(&queue_mutex);
+        sem_wait(&queue_mutex);             // Wait at queue 
 
         clock_t timerStartR = clock();      // Start clock for reader thread 
 
@@ -43,7 +43,7 @@ void * reader(void * arg) {         // Reader thread process
             sem_wait(&rw_mutex);
         }
 
-        sem_post(&queue_mutex);                   // Unlock shared file for writer 
+        sem_post(&queue_mutex);             // Next in line at queue  
         sem_post(&mutex);                   // Unlock shared file for writer 
 
         clock_t fullTimeR = clock()-timerStartR;        // End clock, calculate difference 
@@ -83,12 +83,12 @@ void *writer (void * arg) {         // Writer thread process
 
     while (writerIter>0){
         
-        sem_wait(&queue_mutex);
+        sem_wait(&queue_mutex);         // Wait at queue 
 
         clock_t timerStartW = clock();  // Take initial clock value before writer thread 
         sem_wait(&rw_mutex);            // Lock rw_mutex shared file 
 
-        sem_post(&queue_mutex);
+        sem_post(&queue_mutex);         // Next in line at queue 
 
         int random = (rand() %100 + 1)*1000;    // Random sleep value 
         usleep(random);
