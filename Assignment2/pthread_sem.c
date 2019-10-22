@@ -8,6 +8,7 @@ static int glob = 0;
 static sem_t sem;
 
 
+
 static void *threadFunc(void *arg) {
 
   int loops = *((int *) arg);
