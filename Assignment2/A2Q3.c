@@ -59,13 +59,14 @@ void * reader(void * arg) {         // Reader thread process
        
         avgReading=avgReading+microsecR;    // Update total reading time 
         avgReadingCount++;                  // Update total reads 
-
+        
         int random = (rand() %100 + 1)*1000; // Random sleep time between 1-100 milliseconds
         usleep(random);             
         
         sem_wait(&mutex);                   // Lock shared file for reader
 
         readCount--;
+
         if (readCount == 0){                // Unlock shared file for reader/writer if count is 0 
             sem_post(&rw_mutex);
         }
@@ -88,17 +89,6 @@ void *writer (void * arg) {         // Writer thread process
         clock_t timerStartW = clock();  // Take initial clock value before writer thread 
         sem_wait(&rw_mutex);            // Lock rw_mutex shared file 
 
-        sem_post(&queue_mutex);         // Next in line at queue 
-
-        int random = (rand() %100 + 1)*1000;    // Random sleep value 
-        usleep(random);
-        
-        loc = glob;                     // Increment global value through additional variable 
-        loc = loc+10;
-        glob = loc;
-
-        sem_post(&rw_mutex);            // Unlock rw_mutex shared file 
-        
         clock_t fullTimeW = clock()-timerStartW; // Ends clock, calculates difference between start and end 
         long microsecW = fullTimeW*1000000/CLOCKS_PER_SEC; // Adjusts clock time for microsec 
         
@@ -113,6 +103,18 @@ void *writer (void * arg) {         // Writer thread process
         avgWriting=avgWriting+microsecW;    // Update total write time 
         avgWritingCount++;                  // Update total writes 
 
+        sem_post(&queue_mutex);         // Next in line at queue 
+
+        int random = (rand() %100 + 1)*1000;    // Random sleep value 
+        usleep(random);
+        
+        loc = glob;                     // Increment global value through additional variable 
+        loc = loc+10;
+        glob = loc;
+
+        sem_post(&rw_mutex);            // Unlock rw_mutex shared file 
+        
+       
         writerIter--; 
 
     }
@@ -145,7 +147,7 @@ int main(int argCount, char * argv[])  {    // Takes command arguments, creates 
     int wThreadCount=10;        // Number of writer threads
     int i;                      // Variable to increment threads 
 
-    pthread_t rThreads[rThreadCount+1], wThreads[wThreadCount+1]; // Creates p_thread of writer and reader counts 
+    pthread_t rThreads[rThreadCount], wThreads[wThreadCount]; // Creates p_thread of writer and reader counts 
 
     if (sem_init(&queue_mutex, 0, 1) == -1) {  // Initializes queue mutex semaphore
         printf("Error, init semaphore\n");
@@ -160,16 +162,16 @@ int main(int argCount, char * argv[])  {    // Takes command arguments, creates 
         exit(1);
     }
 
-    for (i=0; i<rThreadCount; i++){         // Creates reader threads 
-        if(pthread_create(&rThreads[i], NULL, reader, &nullInput)){
+     for (i=0; i<wThreadCount; i++){         // Creates writer threads 
+          if(pthread_create(&wThreads[i], NULL, writer, &nullInput)){
               printf("Error, creating threads\n");
               exit(1);
-        }
-        
+              }
     }
-
-    for (i=0; i<wThreadCount; i++){         // Creates writer threads 
-        if(pthread_create(&wThreads[i], NULL, writer, &nullInput)){
+    
+    
+    for (i=0; i<rThreadCount; i++){         // Creates reader threads 
+        if(pthread_create(&rThreads[i], NULL, reader, &nullInput)){
               printf("Error, creating threads\n");
               exit(1);
         }
