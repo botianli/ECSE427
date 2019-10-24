@@ -49,6 +49,10 @@ void * reader(void * arg) {         // Reader thread process
         clock_t fullTimeR = clock()-timerStartR;        // End clock, calculate difference 
         long microsecR = fullTimeR*1000000/CLOCKS_PER_SEC;  //Calculate process time in microseconds
        
+        int random = (rand() %100 + 1)*1000; // Random sleep time between 1-100 milliseconds
+        usleep(random);             
+
+
         if (microsecR>maxReading){          // Change maxReading if valid 
             maxReading=microsecR;
         }
@@ -59,9 +63,6 @@ void * reader(void * arg) {         // Reader thread process
        
         avgReading=avgReading+microsecR;    // Update total reading time 
         avgReadingCount++;                  // Update total reads 
-        
-        int random = (rand() %100 + 1)*1000; // Random sleep time between 1-100 milliseconds
-        usleep(random);             
         
         sem_wait(&mutex);                   // Lock shared file for reader
 
@@ -92,6 +93,10 @@ void *writer (void * arg) {         // Writer thread process
         clock_t fullTimeW = clock()-timerStartW; // Ends clock, calculates difference between start and end 
         long microsecW = fullTimeW*1000000/CLOCKS_PER_SEC; // Adjusts clock time for microsec 
         
+        int random = (rand() %100 + 1)*1000;    // Random sleep value 
+    
+        usleep(random);
+
         if (microsecW>maxWriting){      // Updates writer max clock time if necessary 
             maxWriting=microsecW;
         }
@@ -104,9 +109,6 @@ void *writer (void * arg) {         // Writer thread process
         avgWritingCount++;                  // Update total writes 
 
         sem_post(&queue_mutex);         // Next in line at queue 
-
-        int random = (rand() %100 + 1)*1000;    // Random sleep value 
-        usleep(random);
         
         loc = glob;                     // Increment global value through additional variable 
         loc = loc+10;
@@ -114,6 +116,7 @@ void *writer (void * arg) {         // Writer thread process
 
         sem_post(&rw_mutex);            // Unlock rw_mutex shared file 
         
+
        
         writerIter--; 
 
