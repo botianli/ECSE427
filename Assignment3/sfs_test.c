@@ -2,6 +2,7 @@
  * 
  * Written by Robert Vincent for Programming Assignment #1.
  */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
