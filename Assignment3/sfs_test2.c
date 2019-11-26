@@ -385,6 +385,7 @@ main(int argc, char **argv)
 	  }
 	  max++;
   }
+	
 
   /* Now, having filled up the disk, try one more time to read the
    * contents of the files we created.
