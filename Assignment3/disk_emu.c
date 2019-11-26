@@ -6,6 +6,7 @@
 #include "disk_emu.h"
 
 
+
 FILE* fp = NULL;
 double L, p;
 double r;
