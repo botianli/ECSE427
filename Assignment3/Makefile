@@ -1,5 +1,6 @@
 CFLAGS = -c -g -Wall -std=gnu99 `pkg-config fuse --cflags --libs`
 
+
 LDFLAGS = `pkg-config fuse --cflags --libs`
 
 # Uncomment one of the following three lines to compile
