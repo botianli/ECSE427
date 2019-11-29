@@ -7,7 +7,7 @@
 #include "sfs_api.h"
 #include "sfs_structs.h"
 
-#define MAGIC_NUMBER 256
+
 #define BLOCKSIZE 512 //M block size
 #define MAXFILENAME 15
 #define NUM_BLOCKS SUPERBLOCK_SIZE + FREELIST_SIZE + DIRECTORY_SIZE + INODE_TABLE_SIZE + BLOCKSIZE  //N blocks
