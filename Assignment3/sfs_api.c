@@ -1,11 +1,3 @@
-/*
-Simple File System API: I-Nodes for Unix system
-------------------------------------------------------
-Stephen Carter (C) 2015
-Contact: stephen.carter@mail.mcgill.ca; ID: 260500858
-Last Edited: March 28th 2015
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -52,6 +44,9 @@ typedef struct fileDescriptorEntry  //data type for file descriptors
 {
   unsigned int inode;
   unsigned int rwPointer;
+  unsigned int rPointer;
+  unsigned int wPointer;
+
 } fileDescriptorEntry;
 
 int createInodeTable();             //create i-node table
@@ -437,7 +432,7 @@ int sfs_fwseek(int fileID, int offset) //error if user tries to seek past eof or
     return -1;
   }
   //shift read and write pointers to offset return 0 for success
-  descriptorTable[fileID]->rwPointer = offset;
+  descriptorTable[fileID]->wPointer = offset;
   return 0;
 }
 
@@ -449,7 +444,7 @@ int sfs_frseek(int fileID, int offset) //error if user tries to seek past eof or
     return -1;
   }
   //shift read and write pointers to offset return 0 for success
-  descriptorTable[fileID]->rwPointer = offset;
+  descriptorTable[fileID]->rPointer = offset;
   return 0;
 }
 
